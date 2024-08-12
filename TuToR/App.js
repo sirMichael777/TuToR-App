@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
 import AppLoading from 'expo-app-loading';
 import { useFonts, Ubuntu_400Regular } from '@expo-google-fonts/ubuntu';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import LoadingScreen from './LoadingScreen'; // Import your LoadingScreen component
-import WelcomeScreen from './WelcomeScreen'; // Import your WelcomeScreen component
-import SignUpScreen from './SignUpScreen'; // Import your SignUpScreen component
+import LoadingScreen from './LoadingScreen';
+import WelcomeScreen from './WelcomeScreen';
+import SignUpScreen from './SignUpScreen';
+import StudentDetails1 from './StudentDetails1';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 export default function App() {
   const [loadingComplete, setLoadingComplete] = useState(false);
@@ -28,20 +29,26 @@ export default function App() {
     return <LoadingScreen onFinish={() => setLoadingComplete(true)} />;
   }
 
-  // Once loading is complete, show the WelcomeScreen with navigation setup
+  // Once loading is complete, show the main app screens
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Welcome">
+      <Stack.Navigator initialRouteName="WelcomeScreen">
         <Stack.Screen 
-          name="Welcome" 
+          name="WelcomeScreen" 
           component={WelcomeScreen} 
-          options={{ headerShown: false }} // Hide the header on the Welcome screen
+          options={{ headerShown: false }}
         />
         <Stack.Screen 
-          name="SignUp" 
+          name="SignUpScreen" 
           component={SignUpScreen} 
-          options={{ headerShown: false }} // Hide the header on the SignUp screen
+          options={{ headerShown: false }}
         />
+        <Stack.Screen 
+          name="StudentDetails1" 
+          component={StudentDetails1} 
+          options={{ headerShown: false }}
+        />
+        {/* Add more screens as needed, such as the TutorDetails screen */}
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ImageBackground, StyleSheet, TouchableOpacity } from 'react-native';
 
-export default function SignUpScreen() {
+export default function SignUpScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <ImageBackground 
@@ -10,13 +10,22 @@ export default function SignUpScreen() {
         imageStyle={styles.imageStyle}
       >
         <View style={styles.contentContainer}>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Sign up as?</Text>
-          </View>
-          <TouchableOpacity style={styles.button}>
+          <Text style={styles.title}>Sign up as?</Text>
+          
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={() => navigation.navigate('StudentDetails1')}  // Navigate to StudentDetails1 screen
+          >
             <Text style={styles.buttonText}>Student</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          
+          <TouchableOpacity 
+            style={styles.button}
+            onPress={() => {
+              // Add navigation to the TutorDetails screen here when it's ready
+              navigation.navigate('TutorDetails1'); // Replace with actual screen name when defined
+            }}
+          >
             <Text style={styles.buttonText}>Tutor</Text>
           </TouchableOpacity>
         </View>
