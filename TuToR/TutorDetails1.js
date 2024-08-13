@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
 
-export default function StudentDetails1({ navigation }) {
+export default function TutorDetails1({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,8 +42,8 @@ export default function StudentDetails1({ navigation }) {
       return;
     }
 
-    // Navigate to StudentDetails2 screen
-    navigation.navigate('StudentDetails2');
+    // Navigate to the next screen or handle the action
+    navigation.navigate('TutorDetails2'); // Replace 'TutorDetails2' with the actual screen name
   };
 
   return (
@@ -54,7 +54,7 @@ export default function StudentDetails1({ navigation }) {
         imageStyle={styles.imageStyle}
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
-          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Create your account</Text>
+          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
           
           <TextInput 
             placeholder="Email" 
@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imageStyle: {
+    flex: 1,
     resizeMode: 'cover',
   },
   contentContainer: {

@@ -8,6 +8,11 @@ import LoadingScreen from './LoadingScreen';
 import WelcomeScreen from './WelcomeScreen';
 import SignUpScreen from './SignUpScreen';
 import StudentDetails1 from './StudentDetails1';
+import StudentDetails2 from './StudentDetails2';
+import TutorDetails1 from './TutorDetails1';
+import TutorDetails2 from './TutorDetails2';
+import TutorDetails3 from './TutorDetails3';
+import TutorDetails4 from './TutorDetails4';
 
 const Stack = createStackNavigator();
 
@@ -48,7 +53,31 @@ export default function App() {
           component={StudentDetails1} 
           options={{ headerShown: false }}
         />
-        {/* Add more screens as needed, such as the TutorDetails screen */}
+        <Stack.Screen
+        name="StudentDetails2"
+        component={StudentDetails2}
+        options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="TutorDetails1" 
+          component={TutorDetails1} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+        name="TutorDetails2"
+        component={TutorDetails2}
+        options={{ headerShown: false }}
+        />
+        <Stack.Screen
+        name="TutorDetails3"
+        component={TutorDetails3}
+        options={{ headerShown: false }}
+        />
+        <Stack.Screen
+        name="TutorDetails4"
+        component={TutorDetails4}
+        options={{ headerShown: false }}
+        />
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

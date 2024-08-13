@@ -1,49 +1,24 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
 
-export default function StudentDetails1({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export default function StudentDetails2({ navigation }) {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
 
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const isStrongPassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
-
-  const handleNext = () => {
+  const handleCreateAccount = () => {
     // Basic validation
-    if (!email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !phoneNumber) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
-    if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
-      return;
-    }
-
-    if (!isStrongPassword(password)) {
-      Alert.alert('Error', 'Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
-      return;
-    }
-
-    // Navigate to StudentDetails2 screen
-    navigation.navigate('StudentDetails2');
+    // Navigate to another screen or handle the action to create the account
+    Alert.alert('Success', 'Account created successfully!');
   };
 
   return (
@@ -54,41 +29,38 @@ export default function StudentDetails1({ navigation }) {
         imageStyle={styles.imageStyle}
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
-          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Create your account</Text>
+          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Complete your details</Text>
           
           <TextInput 
-            placeholder="Email" 
+            placeholder="First Name" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
+            value={firstName}
+            onChangeText={setFirstName}
           />
           
           <TextInput 
-            placeholder="Password" 
-            secureTextEntry 
+            placeholder="Last Name" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={password}
-            onChangeText={setPassword}
+            value={lastName}
+            onChangeText={setLastName}
           />
           
           <TextInput 
-            placeholder="Re-enter Password" 
-            secureTextEntry 
+            placeholder="Phone Number" 
+            keyboardType="phone-pad"
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
           />
 
           <TouchableOpacity 
             style={[styles.button, { paddingVertical: height * 0.02 }]}
-            onPress={handleNext}
+            onPress={handleCreateAccount}
           >
-            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Next</Text>
+            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Create Account</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
