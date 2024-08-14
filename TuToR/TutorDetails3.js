@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
+import RNPickerSelect from 'react-native-picker-select';
 
 export default function TutorDetails3({ navigation }) {
   const [gender, setGender] = useState('');
@@ -32,18 +33,21 @@ export default function TutorDetails3({ navigation }) {
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
           <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
-          
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={gender}
-              style={[styles.picker, { paddingVertical: height * 0.02 }]}
-              onValueChange={(itemValue) => setGender(itemValue)}
-            >
-              <Picker.Item label="Select Gender" value="" />
-              <Picker.Item label="Male" value="Male" />
-              <Picker.Item label="Female" value="Female" />
-              <Picker.Item label="Other" value="Other" />
-            </Picker>
+
+          {/* Custom Picker with RNPickerSelect */}
+          <View style={styles.pickerWrapper}>
+            <RNPickerSelect
+              onValueChange={(value) => setGender(value)}
+              items={[
+
+                { label: 'Male', value: 'Male' },
+                { label: 'Female', value: 'Female' },
+                { label: 'Other', value: 'Other' },
+              ]}
+              style={pickerSelectStyles}
+              placeholder={{ label: 'Select Gender', value: '' }}
+              useNativeAndroidPickerStyle={false}
+            />
           </View>
           
           <TextInput 
@@ -54,7 +58,6 @@ export default function TutorDetails3({ navigation }) {
             onChangeText={setAddress}
           />
 
-          {/* Label for Date of Birth */}
           <Text style={[styles.label, { fontSize: width * 0.04 }]}>Date of Birth</Text>
           
           <TouchableOpacity
@@ -104,7 +107,7 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   contentContainer: {
-    backgroundColor: 'rgba(0, 36, 58, 0.9)', // Dark background with opacity
+    backgroundColor: 'rgba(0, 36, 58, 0.9)',
     borderRadius: 20,
     alignItems: 'center',
     width: '80%',
@@ -114,17 +117,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Ubuntu_400Regular',
     marginBottom: 20,
   },
-  pickerContainer: {
+  pickerWrapper: {
     width: '100%',
     backgroundColor: '#F0F0F0',
     borderRadius: 25,
     marginVertical: 10,
+    //paddingLeft: Platform.OS === 'ios' ? 1 : 0, // Padding to align content on iOS
   },
-  picker: {
-    width: '100%',
-    height: 50,
-    color: '#00243a',
-  },
+ 
   input: {
     backgroundColor: '#F0F0F0',
     borderRadius: 25,
@@ -151,5 +151,29 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontFamily: 'Ubuntu_400Regular',
+  },
+});
+
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    
+    fontSize: 16,
+    paddingVertical: 13,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 25,
+    color: '#00243a',
+    paddingRight: 30, // to ensure the text is not clipped
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 25,
+    color: '#00243a',
+    paddingRight: 30, // to ensure the text is not clipped
   },
 });
