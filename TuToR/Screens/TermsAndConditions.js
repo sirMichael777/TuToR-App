@@ -14,10 +14,13 @@ const TermsOfUseScreen = ({ navigation }) => {
     };
 
     return (
-        <ImageBackground source={require('../assets/images/Student.png')} style={styles.backgroundImage}>
+        <ImageBackground source={require('../assets/images/Student.png')} style={ {flex: 1, resizeMode: 'cover', paddingHorizontal: width * 0.05, paddingVertical: height * 0.05,}}>
             <View style={styles.container}>
-                <Text style={styles.header}>Terms of Use</Text>
+
                 <View style={styles.termsContainer}>
+
+                    <Text style={styles.header}>Terms of Use</Text>
+
                     <ScrollView style={styles.scrollView} onScroll={handleScroll}>
                         <Text style={styles.sectionTitle}>1. Introduction</Text>
                         <Text style={styles.sectionText}>
@@ -150,19 +153,13 @@ const styles = StyleSheet.create({
         paddingVertical: height * 0.05,
 
     },
-    backgroundImage: {
-        flex: 1,
-        resizeMode: 'cover',
-        paddingHorizontal: width * 0.05,
-        paddingVertical: height * 0.05,
-    },
     header: {
-        top:50,
         fontSize: width * 0.07,
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: height * 0.02,
-        color: '#333',
+        textDecorationLine: 'underline',
+        color: '#ffff',
     },
     termsContainer: {
         flex: 1,
