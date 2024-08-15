@@ -18,7 +18,12 @@ export default function WelcomeScreen({ navigation }) { // Accept navigation as 
           >
             <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Create Account</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.signInContainer}>
+          
+          {/* Add navigation to the SignInScreen */}
+          <TouchableOpacity 
+            style={styles.signInContainer}
+            onPress={() => navigation.navigate('SignInScreen')} // Navigate to SignInScreen
+          >
             <Text style={[styles.signInText, { fontSize: width * 0.04 }]}>
               Already a member? <Text style={styles.signInLink}>Sign in</Text>
             </Text>

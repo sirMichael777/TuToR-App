@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, Modal, ScrollView } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import RNPickerSelect from 'react-native-picker-select';
 
 export default function TutorDetails4({ navigation }) {
   const [experience, setExperience] = useState('');
@@ -42,7 +42,7 @@ export default function TutorDetails4({ navigation }) {
     }
 
     // Navigate to the next screen or handle the action
-    navigation.navigate('NextScreen'); // Replace 'NextScreen' with the actual screen name
+    navigation.navigate('TutorDetails5'); // Replace 'NextScreen' with the actual screen name
   };
 
   return (
@@ -55,21 +55,20 @@ export default function TutorDetails4({ navigation }) {
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.10 }]}>
           <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
           
-          <View style={[styles.pickerContainer]}>
-            <Picker
-              selectedValue={experience}
-              style={[styles.picker, { paddingVertical: height * 0.02 }]}
-              onValueChange={(itemValue) => setExperience(itemValue)}
-            >
-              <Picker.Item label="Tutoring experience" value="" />
-              <Picker.Item label="0-1 years" value="0-1" />
-              <Picker.Item label="1-2 years" value="1-2" />
-              <Picker.Item label="2-3 years" value="2-3" />
-              <Picker.Item label="3-4 years" value="3-4" />
-              <Picker.Item label="4-5 years" value="4-5" />
-              <Picker.Item label="5+ years" value="5+" />
-            </Picker>
-          </View>
+          <RNPickerSelect
+            onValueChange={(value) => setExperience(value)}
+            placeholder={{ label: "Tutoring experience", value: "" }}
+            items={[
+              { label: "0-1 years", value: "0-1" },
+              { label: "1-2 years", value: "1-2" },
+              { label: "2-3 years", value: "2-3" },
+              { label: "3-4 years", value: "3-4" },
+              { label: "4-5 years", value: "4-5" },
+              { label: "5+ years", value: "5+" },
+            ]}
+            style={pickerSelectStyles}
+            value={experience}
+          />
 
           <TouchableOpacity
             style={[styles.input, styles.languageInput]}
@@ -142,6 +141,27 @@ export default function TutorDetails4({ navigation }) {
   );
 }
 
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    backgroundColor: '#F0F0F0',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    marginVertical: 10,
+    height: 50,
+    fontSize: 16,
+    color: '#00243a',
+  },
+  inputAndroid: {
+    backgroundColor: '#F0F0F0',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    marginVertical: 10,
+    height: 50,
+    fontSize: 16,
+    color: '#00243a',
+  },
+});
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -173,17 +193,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginVertical: 10,
     width: '100%',
-  },
-  pickerContainer: {
-    width: '100%',
-    backgroundColor: '#F0F0F0',
-    borderRadius: 25,
-    marginVertical: 10,
-  },
-  picker: {
-    width: '100%',
-    height: 50,
-    color: '#00243a',
   },
   languageInput: {
     justifyContent: 'center',
@@ -257,3 +266,4 @@ const styles = StyleSheet.create({
     fontFamily: 'Ubuntu_400Regular',
   },
 });
+
