@@ -30,7 +30,7 @@ export default function TutorDetails5({ navigation }) {
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require('./assets/images/LoadingPage.png')}
+        source={require('../assets/images/LoadingPage.png')}
         style={styles.background}
         imageStyle={styles.imageStyle}
       >
@@ -85,7 +85,8 @@ export default function TutorDetails5({ navigation }) {
               if (idFile && cvFile && transcriptFile) {
                 navigation.navigate('ApplicationStatus');
               } else {
-                Alert.alert('Missing Documents', 'Please upload all required documents.');
+                navigation.navigate('ApplicationStatus');
+                //Alert.alert('Missing Documents', 'Please upload all required documents.');
               }
             }}
           >

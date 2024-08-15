@@ -10,10 +10,10 @@ const EarningsScreen = ({ navigation }) => {
             <View style={styles.header}>
                 <Text style={styles.headerText}>Earnings</Text>
                 <View style={styles.iconsContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
                         <Ionicons name="notifications-outline" size={width * 0.08} color="#001F3F" />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
                         <Ionicons name="person-circle-outline" size={width * 0.08} color="#001F3F" />
                     </TouchableOpacity>
                 </View>

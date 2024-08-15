@@ -217,10 +217,10 @@ const FindTutorScreen = ({ navigation }) => {
             <Ionicons name="arrow-back-outline" size={width * 0.07} color="black" />
           </TouchableOpacity>
           <Text style={styles.headerText}>Find Tutor</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+          <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
             <Ionicons name="notifications-outline" size={width * 0.07} color="black" style={styles.notificationIcon} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
             <Ionicons name="person-outline" size={24} color="black" style={styles.profileIcon} />
           </TouchableOpacity>
         </View>

@@ -1,66 +1,94 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
 
-export default function StudentDetails2({ navigation }) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+export default function TutorDetails1({ navigation }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
 
-  const handleCreateAccount = () => {
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const isStrongPassword = (password) => {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const handleNext = () => {
     // Basic validation
-    if (!firstName || !lastName || !phoneNumber) {
+    if (!email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
-    // Navigate to another screen or handle the action to create the account
-    Alert.alert('Success', 'Account created successfully!');
+    if (!isValidEmail(email)) {
+      Alert.alert('Error', 'Please enter a valid email address.');
+      return;
+    }
+
+    if (!isStrongPassword(password)) {
+      Alert.alert('Error', 'Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match.');
+      return;
+    }
+
+    // Navigate to the next screen or handle the action
+    navigation.navigate('TutorDetails2'); // Replace 'TutorDetails2' with the actual screen name
   };
 
   return (
     <View style={styles.container}>
       <ImageBackground 
-        source={require('./assets/images/LoadingPage.png')} 
+        source={require('../assets/images/LoadingPage.png')} 
         style={styles.background}
         imageStyle={styles.imageStyle}
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
-          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Complete your details</Text>
+          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
           
           <TextInput 
-            placeholder="First Name" 
+            placeholder="Email" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={firstName}
-            onChangeText={setFirstName}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           
           <TextInput 
-            placeholder="Last Name" 
+            placeholder="Password" 
+            secureTextEntry 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={lastName}
-            onChangeText={setLastName}
+            value={password}
+            onChangeText={setPassword}
           />
           
           <TextInput 
-            placeholder="Phone Number" 
-            keyboardType="phone-pad"
+            placeholder="Re-enter Password" 
+            secureTextEntry 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
 
           <TouchableOpacity 
             style={[styles.button, { paddingVertical: height * 0.02 }]}
-            onPress={handleCreateAccount}
+            onPress={handleNext}
           >
-            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Create Account</Text>
+            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Next</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
@@ -80,6 +108,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imageStyle: {
+    flex: 1,
     resizeMode: 'cover',
   },
   contentContainer: {

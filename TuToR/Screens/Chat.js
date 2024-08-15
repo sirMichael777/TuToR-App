@@ -10,10 +10,10 @@ const ChatScreen = ({ navigation }) => {
             <View style={styles.header}>
                 <Text style={styles.headerText}>Chat</Text>
                 <View style={styles.iconContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Notifications')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
                         <Ionicons name="notifications-outline" size={24} color="black" />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
                         <Ionicons name="person-outline" size={24} color="black" style={styles.profileIcon} />
                     </TouchableOpacity>
                 </View>

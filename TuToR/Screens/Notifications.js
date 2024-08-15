@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-const NotificationsScreen = () => {
+const NotificationScreen = () => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -37,4 +37,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default NotificationsScreen;
+export default NotificationScreen;

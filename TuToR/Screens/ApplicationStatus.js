@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ImageBackground, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, ImageBackground, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 
 export default function ApplicationStatus({ navigation }) {
   const windowDimensions = Dimensions.get('window');
@@ -9,7 +9,7 @@ export default function ApplicationStatus({ navigation }) {
   return (
     <View style={styles.container}>
       <ImageBackground
-        source={require('./assets/images/LoadingPage.png')}
+        source={require('../assets/images/LoadingPage.png')}
         style={styles.background}
         imageStyle={styles.imageStyle}
       >
@@ -18,6 +18,13 @@ export default function ApplicationStatus({ navigation }) {
           <Text style={styles.bodyText}>
             Your application is currently under review. We are verifying your qualifications and experience to ensure the highest quality for our students.
           </Text>
+
+          <TouchableOpacity 
+            style={[styles.button, { marginTop: 30 }]} 
+            onPress={() => navigation.navigate('TutorHomeScreen')}
+          >
+            <Text style={styles.buttonText}>OK</Text>
+          </TouchableOpacity>
         </View>
       </ImageBackground>
     </View>
@@ -58,5 +65,17 @@ const styles = StyleSheet.create({
     fontFamily: 'Ubuntu_400Regular',
     fontSize: 16,
     textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#00243a',
+    borderRadius: 25,
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 15,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontFamily: 'Ubuntu_400Regular',
+    fontSize: 16,
   },
 });

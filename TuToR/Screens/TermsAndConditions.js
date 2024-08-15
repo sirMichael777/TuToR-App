@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions,ImageBackground } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ImageBackground } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -8,20 +8,25 @@ const TermsOfUseScreen = ({ navigation }) => {
 
     const handleScroll = ({ nativeEvent }) => {
         const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-        if (layoutMeasurement.height + contentOffset.y >= contentSize.height) {
+        if (layoutMeasurement.height + contentOffset.y >= contentSize.height*0.99) {
             setIsScrolledToEnd(true);
+            
         }
     };
 
     return (
-        <ImageBackground source={require('../assets/images/Student.png')} style={ {flex: 1, resizeMode: 'cover', paddingHorizontal: width * 0.05, paddingVertical: height * 0.05,}}>
+        <ImageBackground 
+            source={require('../assets/images/Student.png')} 
+            style={styles.background}
+        >
             <View style={styles.container}>
-
                 <View style={styles.termsContainer}>
-
                     <Text style={styles.header}>Terms of Use</Text>
-
-                    <ScrollView style={styles.scrollView} onScroll={handleScroll}>
+                    <ScrollView 
+                        style={styles.scrollView} 
+                        onScroll={handleScroll} 
+                        scrollEventThrottle={16}
+                    >
                         <Text style={styles.sectionTitle}>1. Introduction</Text>
                         <Text style={styles.sectionText}>
                             Welcome to TuToR, a mobile application designed to connect students with tutors. By using this app, you agree to comply with and be bound by the following terms of use. These terms govern your access to and use of the app, including any content, functionality, and services offered.
@@ -136,7 +141,7 @@ const TermsOfUseScreen = ({ navigation }) => {
                 </View>
                 <TouchableOpacity
                     style={[styles.agreeButton, { backgroundColor: isScrolledToEnd ? '#007BFF' : '#cccccc' }]}
-                    onPress={() => navigation.navigate('NextScreen')}
+                    onPress={() => navigation.navigate('MainApp')}
                     disabled={!isScrolledToEnd}
                 >
                     <Text style={styles.agreeButtonText}>Agree and continue</Text>
@@ -151,7 +156,10 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: width * 0.05,
         paddingVertical: height * 0.05,
-
+    },
+    background: {
+        flex: 1,
+        resizeMode: 'cover',
     },
     header: {
         fontSize: width * 0.07,
@@ -185,7 +193,7 @@ const styles = StyleSheet.create({
         lineHeight: width * 0.06,
     },
     agreeButton: {
-        top:50,
+        top: 50,
         borderRadius: width * 0.05,
         paddingVertical: height * 0.02,
         alignItems: 'center',

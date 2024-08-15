@@ -5,7 +5,7 @@ export default function SignUpScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <ImageBackground 
-        source={require('./assets/images/LoadingPage.png')} 
+        source={require('../assets/images/LoadingPage.png')} 
         style={styles.background} 
         imageStyle={styles.imageStyle}
       >
