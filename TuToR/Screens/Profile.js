@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.headerText}>Profile</Text>
@@ -12,7 +12,7 @@ const ProfileScreen = () => {
             <View style={styles.profileInfoContainer}>
                 <View style={styles.profileDetails}>
                     <Text style={styles.profileName}>Thabang Mokoena</Text>
-                    <Text style={styles.profileEmail}>Email</Text>
+                    <Text style={styles.profileEmail}>shaunthabang835@gmail.com</Text>
                 </View>
                 <TouchableOpacity onPress={() => { }}>
                     <View style={styles.profileImagePlaceholder}>
@@ -34,7 +34,7 @@ const ProfileScreen = () => {
                     <Ionicons name="settings-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Settings</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.optionButton}>
+                <TouchableOpacity style={styles.optionButton}  onPress={() => navigation.navigate('WelcomeScreen')}>
                     <Ionicons name="log-out-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Log out</Text>
                 </TouchableOpacity>

@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AppLoading from 'expo-app-loading';
 import { useFonts, Ubuntu_400Regular } from '@expo-google-fonts/ubuntu';
-import { Ionicons } from '@expo/vector-icons';
+import {FontAwesome5, Ionicons} from '@expo/vector-icons';
 
 // Importing all the screens
 import LoadingScreen from './Screens/LoadingScreen';
@@ -29,6 +29,9 @@ import FindTutorScreen from './Screens/FindTutor';
 import ApplicationStatus from './Screens/ApplicationStatus';
 import NotificationScreen from './Screens/Notifications';
 import ProfileScreen from './Screens/Profile';
+import EarningsScreen from './Screens/Earning';
+import TutorHomeScreen from './Screens/TutorHomeScreen';
+import TutorSessionScreen from './Screens/TutorSession';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -81,6 +84,39 @@ export default function App() {
         <Tab.Screen name="Sessions" component={SessionScreen} />
         <Tab.Screen name="Chat" component={ChatScreen} />
       </Tab.Navigator>
+    );
+  }
+
+  function TutorMainApp() {
+    return (
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+              tabBarIcon: ({ focused, color, size }) => {
+                let iconName;
+
+                if (route.name === 'Home') {
+                  iconName = focused ? 'home' : 'home-outline';
+                  return <Ionicons name={iconName} size={size} color={color} />;
+                } else if (route.name === 'Earnings') {
+                  return <FontAwesome5 name="hand-holding-usd" size={size} color={color} />;
+                } else if (route.name === 'Sessions') {
+                  iconName = focused ? 'time' : 'time-outline';
+                  return <Ionicons name={iconName} size={size} color={color} />;
+                } else if (route.name === 'Chat') {
+                  iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
+                  return <Ionicons name={iconName} size={size} color={color} />;
+                }
+              },
+              tabBarActiveTintColor: 'blue',
+              tabBarInactiveTintColor: 'gray',
+              headerShown: false,
+            })}
+        >
+          <Tab.Screen name="Home" component={TutorHomeScreen} />
+          <Tab.Screen name="Earnings" component={EarningsScreen} />
+          <Tab.Screen name="Sessions" component={TutorSessionScreen} />
+          <Tab.Screen name="Chat" component={ChatScreen} />
+        </Tab.Navigator>
     );
   }
 
@@ -192,6 +228,12 @@ export default function App() {
           component={MainApp}
           options={{ headerShown: false }}
         />
+
+        <Stack.Screen
+          name="TutorMainApp"
+          component={TutorMainApp}
+          options={{ headerShown: false }}
+          />
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>

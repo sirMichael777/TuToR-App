@@ -239,8 +239,9 @@ const FindTutorScreen = ({ navigation }) => {
             onPress={() => setCurrentStep(currentStep + 1)}
             disabled={currentStep === 3}
         >
-          <Text style={styles.nextButtonText}>{currentStep < 3 ? 'Next' : 'Finish'}</Text>
+          {currentStep < 3 && <Text style={styles.nextButtonText}>Next</Text>}
         </TouchableOpacity>
+
       </View>
   );
 };
