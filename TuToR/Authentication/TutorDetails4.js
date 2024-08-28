@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, Modal, ScrollView } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import {doc, setDoc} from "firebase/firestore";
+import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
+import {createUserWithEmailAndPassword} from "firebase/auth";
 
-export default function TutorDetails4({ navigation }) {
+export default function TutorDetails4({ route, navigation }) {
+  const {role,email, password, firstName, lastName, phoneNumber, gender,address,dateOfBirth } = route.params;
   const [experience, setExperience] = useState('');
   const [languages, setLanguages] = useState([]);
   const [courses, setCourses] = useState('');
   const [rate, setRate] = useState('');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
 
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
@@ -35,14 +42,56 @@ export default function TutorDetails4({ navigation }) {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!experience || !languages.length || !courses || !rate) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      setError('Please fill in all fields.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
-    // Navigate to the next screen or handle the action
-    navigation.navigate('TutorDetails5'); // Replace 'NextScreen' with the actual screen name
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
+      const userId = userCredential.user.uid;
+
+      await setDoc(doc(firestoreDB, 'Tutors', userId), {
+        firstName,
+        lastName,
+        phoneNumber,
+        gender,
+        address,
+        dateOfBirth,
+        experience,
+        languages,
+        courses,
+        rate,
+        role,
+        createdAt: new Date(),
+      });
+
+      const data = {
+        _id: userCredential?.user.uid,
+        name: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        role: role,
+        providerData: userCredential.user.providerData[0] || null,
+      }
+      await setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data)
+
+      navigation.navigate('TutorDetails5', {userId});
+    } catch (error) {
+      console.error('Error creating user:', error.message);
+      setError(error.message);
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
+    }
+
   };
 
   return (
@@ -54,7 +103,7 @@ export default function TutorDetails4({ navigation }) {
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.10 }]}>
           <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
-          
+          {showError && (<Text style={styles.error}>{error}</Text>)}
           <RNPickerSelect
             onValueChange={(value) => setExperience(value)}
             placeholder={{ label: "Tutoring experience", value: "" }}
@@ -186,6 +235,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'Ubuntu_400Regular',
     marginBottom: 20,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   input: {
     backgroundColor: '#F0F0F0',

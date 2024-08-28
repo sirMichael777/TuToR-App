@@ -3,21 +3,24 @@ import { View, Text, TouchableOpacity, StyleSheet, ImageBackground, Dimensions }
 
 const { width, height } = Dimensions.get('window');
 
-const SignInScreen = ({ navigation }) => {
+const AuthTypeScreen = ({ route,navigation }) => {
+
+    const { action } = route.params;
+
     return (
         <ImageBackground source={require('../assets/images/SignUpScreen.png')} style={styles.backgroundImage}>
             <View style={styles.container}>
                 <View style={styles.signInContainer}>
-                    <Text style={styles.signInText}>Sign in as</Text>
+                    <Text style={styles.signInText}>{action === 'SignUp' ? 'Sign up as?' : 'Sign in as?'}</Text>
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={() => navigation.navigate('StudentSignIn')}
+                        onPress={() => navigation.navigate(action === 'SignUp' ? 'StudentDetails1' : 'SignInScreen', { role: 'Student' })}
                     >
                         <Text style={styles.buttonText}>Student</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={() => navigation.navigate('TutorSignIn')}
+                        onPress={() => navigation.navigate(action === 'SignUp' ? 'TutorDetails1' : 'SignInScreen', { role: 'Tutor' })}
                     >
                         <Text style={styles.buttonText}>Tutor</Text>
                     </TouchableOpacity>
@@ -39,7 +42,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     signInContainer: {
-        top: height *0.06,
+        top: height * 0.06,
         width: width * 0.8,
         backgroundColor: '#001F3F',
         padding: width * 0.05,
@@ -65,4 +68,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default SignInScreen;
+export default AuthTypeScreen;

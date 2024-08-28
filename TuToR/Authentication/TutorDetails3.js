@@ -1,27 +1,36 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
 import RNPickerSelect from 'react-native-picker-select';
 
-export default function TutorDetails3({ navigation }) {
+
+export default function TutorDetails3({ route, navigation }) {
+  const { role, email, password, firstName, lastName, phoneNumber } = route.params;
   const [gender, setGender] = useState('');
   const [address, setAddress] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!gender || !address || !dateOfBirth) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      setError('Please fill in all fields.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
+
+
     }
 
-    // Navigate to the next screen or handle the action
-    navigation.navigate('TutorDetails4');
+    navigation.navigate('TutorDetails4', { role, email, password, firstName, lastName, phoneNumber, gender, address, dateOfBirth });
+
+
   };
 
   return (
@@ -33,7 +42,7 @@ export default function TutorDetails3({ navigation }) {
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
           <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
-
+          {showError && (<Text style={styles.error}>{error}</Text>)}
           {/* Custom Picker with RNPickerSelect */}
           <View style={styles.pickerWrapper}>
             <RNPickerSelect
@@ -116,6 +125,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'Ubuntu_400Regular',
     marginBottom: 20,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   pickerWrapper: {
     width: '100%',

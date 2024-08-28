@@ -1,34 +1,59 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions} from 'react-native';
+import {isStrongPassword, isValidEmail} from "../ValidationUtils/ValidationUtils";
 
-export default function TutorDetails2({ navigation }) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
 
+export default function StudentDetails1({ route ,navigation }) {
+  const {role} = route.params;
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
-
-  const isValidPhoneNumber = (number) => {
-    const phoneRegex = /^\d{10}$/; // Simplified phone number validation (adjust based on your requirements)
-    return phoneRegex.test(number);
-  };
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
 
   const handleNext = () => {
     // Basic validation
-    if (!firstName || !lastName || !phoneNumber) {
-      Alert.alert('Error', 'Please fill in all fields.');
+    if (!email || !password || !confirmPassword) {
+      setError('Please fill in all fields.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
-    if (!isValidPhoneNumber(phoneNumber)) {
-      Alert.alert('Error', 'Please enter a valid phone number.');
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address.');
+      setShowError(true);
+      setTimeout(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
-    // Navigate to the next screen or handle the action
-    navigation.navigate('TutorDetails3'); // Replace 'NextScreen' with the actual screen name
+    if (!isStrongPassword(password)) {
+      setError('Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.');
+      setShowError(true);
+      setTimeout(() => {
+        setShowError(false);
+      }, 2000);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
+      return;
+    }
+
+    // Navigate to StudentDetails2 screen
+    navigation.navigate('StudentDetails2', { role, email, password });
   };
 
   return (
@@ -38,32 +63,38 @@ export default function TutorDetails2({ navigation }) {
         style={styles.background}
         imageStyle={styles.imageStyle}
       >
+
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
-          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
-          
+
+          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Create your account</Text>
+
+          {showError && (<Text style={styles.error}>{error}</Text>)}
           <TextInput 
-            placeholder="First Name" 
+            placeholder="Email" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={firstName}
-            onChangeText={setFirstName}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
           />
           
           <TextInput 
-            placeholder="Last Name" 
+            placeholder="Password" 
+            secureTextEntry 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={lastName}
-            onChangeText={setLastName}
+            value={password}
+            onChangeText={setPassword}
           />
           
           <TextInput 
-            placeholder="Phone Number" 
+            placeholder="Re-enter Password" 
+            secureTextEntry 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
 
           <TouchableOpacity 
@@ -90,7 +121,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imageStyle: {
-    flex: 1,
     resizeMode: 'cover',
   },
   contentContainer: {
@@ -103,6 +133,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'Ubuntu_400Regular',
     marginBottom: 20,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   input: {
     backgroundColor: '#F0F0F0',

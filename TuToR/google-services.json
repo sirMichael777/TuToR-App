@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "473253658607",
+    "project_id": "tutor-f5825",
+    "storage_bucket": "tutor-f5825.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:473253658607:android:2c06da049ee78318df801a",
+        "android_client_info": {
+          "package_name": "com.TheChefs.TuToR"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxlCKn0mD8qYhx0QAxLl_ceSbqB7fduzg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
+import {isStrongPassword, isValidEmail} from "../ValidationUtils/ValidationUtils";
 
-export default function TutorDetails1({ navigation }) {
+export default function TutorDetails1({ route,navigation }) {
+  const {role} = route.params;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -9,41 +11,50 @@ export default function TutorDetails1({ navigation }) {
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
-
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const isStrongPassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
 
   const handleNext = () => {
     // Basic validation
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields.');
+      setError('Please fill in all fields.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
     if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
+      setError('Please enter a valid email address.');
+      setShowError(true);
+      setTimeout(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
     if (!isStrongPassword(password)) {
-      Alert.alert('Error', 'Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.');
+      setError('Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.');
+      setShowError(true);
+      setTimeout(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
+      setError('Passwords do not match.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
+
     // Navigate to the next screen or handle the action
-    navigation.navigate('TutorDetails2'); // Replace 'TutorDetails2' with the actual screen name
+    navigation.navigate('TutorDetails2',{ role, email, password }); // Replace 'TutorDetails2' with the actual screen name
   };
 
   return (
@@ -55,7 +66,7 @@ export default function TutorDetails1({ navigation }) {
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
           <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
-          
+          {showError && (<Text style={styles.error}>{error}</Text>)}
           <TextInput 
             placeholder="Email" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
@@ -110,6 +121,11 @@ const styles = StyleSheet.create({
   imageStyle: {
     flex: 1,
     resizeMode: 'cover',
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   contentContainer: {
     backgroundColor: 'rgba(0, 36, 58, 0.9)', // Dark background with opacity

@@ -2,11 +2,18 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ImageBackground, StyleSheet, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { FontAwesome } from '@expo/vector-icons';
+import {firebaseStorage, firestoreDB} from "../Config/firebaseConfig";
+import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
 
-export default function TutorDetails5({ navigation }) {
+
+export default function TutorDetails5({ route,navigation }) {
   const [idFile, setIdFile] = useState(null);
   const [cvFile, setCvFile] = useState(null);
   const [transcriptFile, setTranscriptFile] = useState(null);
+  const {userId} = route.params;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
 
   const uploadDocument = async (setFile, fileType) => {
     try {
@@ -14,18 +21,63 @@ export default function TutorDetails5({ navigation }) {
         type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/*'],
       });
 
-      if (result.type === 'success') {
-        setFile(result);
+      if (!result.canceled) {
+
+        const uploadUrl = await uploadFileToStorage(result.assets[0].uri);
+        setFile(uploadUrl);
         console.log(`${fileType} picked:`, result);
-        Alert.alert('Success', `${fileType} uploaded successfully!`);
-      } else if (result.type === 'cancel') {
+
+      } else{
+        setFile(null);
         console.log('Document pick was canceled');
       }
     } catch (error) {
       console.error('Error picking document:', error);
-      Alert.alert('Error', 'Failed to pick the document. Please try again.');
     }
   };
+
+  const handleApply = async () => {
+    if (!idFile || !cvFile || !transcriptFile) {
+      Alert.alert('Missing Documents', 'Please upload all required documents.');
+      return;
+    }
+
+    try {
+      navigation.navigate('TermsAndConditions', { userId: userId.user.uid });
+
+    } catch (error) {
+      console.error('Error uploading documents:', error.message);
+      Alert.alert('Error', 'Failed to upload documents. Please try again.');
+    }
+  };
+
+  const uploadFileToStorage = async (uri) => {
+    const  blob = await new Promise((resolve,reject)=> {
+
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function (){
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (e){
+        console.log(e)
+        reject(new TypeError("Network Error"));
+      };
+      xhr.responseType = 'blob';
+      xhr.open("GET",uri,true);
+      xhr.send(null);
+    });
+
+    try {
+      const storageRef = ref(firebaseStorage,`Documents/doc${Date.now()}`);
+      const result = await uploadBytes(storageRef, blob );
+      blob.close();
+      return await getDownloadURL(storageRef);
+    }catch (err){
+      Alert.alert("Error:", err.message)
+    }
+  };
+
+
 
   return (
     <View style={styles.container}>
@@ -81,14 +133,7 @@ export default function TutorDetails5({ navigation }) {
 
           <TouchableOpacity
             style={[styles.button, styles.applyButton]}
-            onPress={() => {
-              if (idFile && cvFile && transcriptFile) {
-                navigation.navigate('ApplicationStatus');
-              } else {
-                navigation.navigate('ApplicationStatus');
-                //Alert.alert('Missing Documents', 'Please upload all required documents.');
-              }
-            }}
+            onPress={handleApply}
           >
             <Text style={styles.applyButtonText}>Apply</Text>
           </TouchableOpacity>

@@ -9,19 +9,19 @@ import {FontAwesome5, Ionicons} from '@expo/vector-icons';
 
 // Importing all the screens
 import LoadingScreen from './Screens/LoadingScreen';
-import WelcomeScreen from './Screens/WelcomeScreen';
-import SignUpScreen from './Screens/SignUpScreen';
-import SignInScreen from './Screens/SignInScreen';
-import ResetPasswordScreen from './Screens/ResetPasswordScreen';
+import WelcomeScreen from './Authentication/WelcomeScreen';
+import SignUpScreen from './Authentication/SignUpScreen';
+import SignInScreen from './Authentication/SignInScreen';
+import ResetPasswordScreen from './Authentication/ResetPasswordScreen';
 import EnterResetCodeScreen from './Screens/EnterResetCodeScreen';
-import TutorDetails1 from './Screens/TutorDetails1';
-import TutorDetails2 from './Screens/TutorDetails2';
-import TutorDetails3 from './Screens/TutorDetails3';
-import TutorDetails4 from './Screens/TutorDetails4';
-import TutorDetails5 from './Screens/TutorDetails5';
-import StudentDetails1 from './Screens/StudentDetails1';
-import StudentDetails2 from './Screens/StudentDetails2';
-import TermsAndConditions from './Screens/TermsAndConditions';
+import TutorDetails1 from './Authentication/TutorDetails1';
+import TutorDetails2 from './Authentication/TutorDetails2';
+import TutorDetails3 from './Authentication/TutorDetails3';
+import TutorDetails4 from './Authentication/TutorDetails4';
+import TutorDetails5 from './Authentication/TutorDetails5';
+import StudentDetails1 from './Authentication/StudentDetails1';
+import StudentDetails2 from './Authentication/StudentDetails2';
+import TermsAndConditions from './Authentication/TermsAndConditions';
 import StudentHome from './Screens/StudentHome';
 import ChatScreen from './Screens/Chat';
 import SessionScreen from './Screens/Session';
@@ -32,6 +32,7 @@ import ProfileScreen from './Screens/Profile';
 import EarningsScreen from './Screens/Earning';
 import TutorHomeScreen from './Screens/TutorHomeScreen';
 import TutorSessionScreen from './Screens/TutorSession';
+import AuthTypeScreen from "./Authentication/AuthTypeScreen";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -130,6 +131,13 @@ export default function App() {
           component={WelcomeScreen} 
           options={{ headerShown: false }}
         />
+
+        <Stack.Screen
+            name="AuthTypeScreen"
+            component={AuthTypeScreen}
+            options={{ headerShown: false }}
+        />
+
 
         {/* Sign Up Screen */}
         <Stack.Screen 

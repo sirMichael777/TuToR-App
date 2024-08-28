@@ -1,16 +1,45 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ImageBackground } from 'react-native';
+import {doc, getDoc, setDoc} from "firebase/firestore";
+import {firestoreDB} from "../Config/firebaseConfig";
 
 const { width, height } = Dimensions.get('window');
 
-const TermsOfUseScreen = ({ navigation }) => {
+const TermsOfUseScreen = ({route, navigation }) => {
+
     const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
+    const { userId } = route.params;
 
     const handleScroll = ({ nativeEvent }) => {
+
         const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
         if (layoutMeasurement.height + contentOffset.y >= contentSize.height*0.99) {
             setIsScrolledToEnd(true);
             
+        }
+    };
+
+    const handleAgree = async () => {
+        try {
+            const userDoc = await getDoc(doc(firestoreDB, 'users', userId));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                const role = userData.role; // Get the role attribute from the user document
+
+                const collectionName = role === 'Student' ? 'Students' : 'Tutors';
+
+                // Update the acceptedTerms field in the appropriate collection
+                await setDoc(doc(firestoreDB, collectionName, userId), { acceptedTerms: true }, { merge: true });
+
+                // Navigate to the SignInScreen after updating the acceptance flag
+                navigation.navigate('SignInScreen');
+            } else {
+                console.error("User document does not exist");
+                // Handle the case where the user document does not exist
+            }
+        } catch (error) {
+            console.error("Error updating terms acceptance: ", error.message);
+
         }
     };
 
@@ -141,7 +170,7 @@ const TermsOfUseScreen = ({ navigation }) => {
                 </View>
                 <TouchableOpacity
                     style={[styles.agreeButton, { backgroundColor: isScrolledToEnd ? '#007BFF' : '#cccccc' }]}
-                    onPress={() => navigation.navigate('MainApp')}
+                    onPress={handleAgree}
                     disabled={!isScrolledToEnd}
                 >
                     <Text style={styles.agreeButtonText}>Agree and continue</Text>

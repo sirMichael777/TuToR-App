@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
+import {createUserWithEmailAndPassword} from "firebase/auth";
+import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
+import {doc, setDoc} from "firebase/firestore";
 
-export default function StudentDetails2({ navigation }) {
+export default function StudentDetails2({ route,navigation }) {
+  const {role,email, password } = route.params;
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -10,16 +14,34 @@ export default function StudentDetails2({ navigation }) {
   const height = windowDimensions.height;
   const width = windowDimensions.width;
 
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     // Basic validation
     if (!firstName || !lastName || !phoneNumber) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
 
-    // Navigate to another screen or handle the action to create the account
+    await createUserWithEmailAndPassword(firebaseAuth, email, password)
+        .then(userCredential => {
+          const data = {
+            _id: userCredential?.user.uid,
+            name: firstName,
+            lastName: lastName,
+            phoneNumber: phoneNumber,
+            role: role,
+            providerData: userCredential.user.providerData[0] || null,
+          }
+          setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data)
+          setDoc(doc(firestoreDB, 'Students', userCredential?.user.uid), data)
+
+          navigation.navigate('TermsAndConditions', { userId: userCredential.user.uid });
+        })
+        .catch(error => {
+          console.error("Error creating user: ", error.message);
+          // Handle error (e.g., display error message)
+        });
+
     Alert.alert('Success', 'Account created successfully!');
-    navigation.navigate('TermsAndConditions');
   };
 
   return (

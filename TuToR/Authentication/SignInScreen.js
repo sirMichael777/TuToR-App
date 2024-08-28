@@ -1,13 +1,52 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Alert } from 'react-native';
+import {signInWithEmailAndPassword} from "firebase/auth";
+import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
+import {doc, getDoc} from "firebase/firestore";
+import {isValidEmail} from "../ValidationUtils/ValidationUtils";
 
 export default function SignInScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
 
-  const handleSignIn = () => {
-    // Implement sign-in logic here
-    Alert.alert('Sign In', 'Sign in logic goes here.');
+
+  const handleSignIn = async () => {
+    if(isValidEmail(email) && email !==""){
+      await signInWithEmailAndPassword(firebaseAuth,email, password)
+          .then((userCredential) => {
+            if(userCredential){
+              console.log("User Id:" ,userCredential?.user.uid);
+              getDoc(doc(firestoreDB,'users',userCredential.user.uid)).then(
+                  (docSnap) => {
+                    if(docSnap.exists()){
+                      console.log("Is signed in");
+                    }
+                  })
+            }
+          }).catch((error) => {
+
+            if(error.message.includes('invalid-credential')){
+              setShowError(true);
+              setError("incorrect password or email")
+            }else{
+              setShowError(true);
+              setError('User does not exist')
+              console.log(error.message);
+            }
+            setInterval(() => {
+              setShowError(false);
+            }, 2000);
+
+          })
+    }else{
+      setError('Invalid email format.');
+      setShowError(true);
+
+    }
+
+
   };
 
   return (
@@ -19,6 +58,8 @@ export default function SignInScreen({ navigation }) {
       >
         <View style={styles.fixedContainer}>
           <Text style={styles.title}>Sign in</Text>
+
+          {showError && (<Text style={styles.error}>{error}</Text>)}
 
           <TextInput 
             placeholder="Email" 
@@ -50,7 +91,7 @@ export default function SignInScreen({ navigation }) {
             <Text style={styles.linkText}>Forgot password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('SignUpScreen')}>
+          <TouchableOpacity onPress={() => navigation.navigate('AuthTypeScreen', { action: 'SignUp' })}>
             <Text style={styles.linkText}>Don’t have an account? Sign up</Text>
           </TouchableOpacity>
         </View>
@@ -88,6 +129,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     fontSize: 20,
   },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+
   input: {
     backgroundColor: '#F0F0F0',
     borderRadius: 25,

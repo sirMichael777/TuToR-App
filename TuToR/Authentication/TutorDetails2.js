@@ -1,49 +1,42 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
+import {isValidPhoneNumber} from '../ValidationUtils/ValidationUtils'
 
-export default function StudentDetails1({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
+export default function TutorDetails2({route , navigation }) {
+  const { role, email, password } = route.params;
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [error, setError] = useState('');
+  const [showError, setShowError] = useState(false);
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
-  const isStrongPassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
 
   const handleNext = () => {
     // Basic validation
-    if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields.');
+    if (!firstName || !lastName || !phoneNumber) {
+      setError('Please fill in all fields.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
-    if (!isValidEmail(email)) {
-      Alert.alert('Error', 'Please enter a valid email address.');
+    if (!isValidPhoneNumber(phoneNumber)) {
+      setError('Please enter a valid phoneNumber.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
-    if (!isStrongPassword(password)) {
-      Alert.alert('Error', 'Password must be at least 8 characters long, include uppercase and lowercase letters, a number, and a special character.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
-      return;
-    }
-
-    // Navigate to StudentDetails2 screen
-    navigation.navigate('StudentDetails2');
+    // Navigate to the next screen or handle the action
+    navigation.navigate('TutorDetails3',{ role, email, password, firstName, lastName, phoneNumber }); // Replace 'NextScreen' with the actual screen name
   };
 
   return (
@@ -54,34 +47,31 @@ export default function StudentDetails1({ navigation }) {
         imageStyle={styles.imageStyle}
       >
         <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
-          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Create your account</Text>
-          
+          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Apply to become a tutor</Text>
+          {showError && (<Text style={styles.error}>{error}</Text>)}
           <TextInput 
-            placeholder="Email" 
+            placeholder="First Name" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
+            value={firstName}
+            onChangeText={setFirstName}
           />
           
           <TextInput 
-            placeholder="Password" 
-            secureTextEntry 
+            placeholder="Last Name" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={password}
-            onChangeText={setPassword}
+            value={lastName}
+            onChangeText={setLastName}
           />
           
           <TextInput 
-            placeholder="Re-enter Password" 
-            secureTextEntry 
+            placeholder="Phone Number" 
             style={[styles.input, { paddingVertical: height * 0.02 }]} 
             placeholderTextColor="#a9a9a9" 
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            keyboardType="phone-pad"
           />
 
           <TouchableOpacity 
@@ -108,6 +98,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   imageStyle: {
+    flex: 1,
     resizeMode: 'cover',
   },
   contentContainer: {
@@ -115,6 +106,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     width: '80%',
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   title: {
     color: '#FFFFFF',
