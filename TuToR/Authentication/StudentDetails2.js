@@ -9,7 +9,6 @@ export default function StudentDetails2({ route,navigation }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
@@ -22,6 +21,7 @@ export default function StudentDetails2({ route,navigation }) {
     }
 
     await createUserWithEmailAndPassword(firebaseAuth, email, password)
+
         .then(userCredential => {
           const data = {
             _id: userCredential?.user.uid,

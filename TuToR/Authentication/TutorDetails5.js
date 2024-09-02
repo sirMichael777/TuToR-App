@@ -47,6 +47,7 @@ export default function TutorDetails5({ route,navigation }) {
     }
 
     try {
+
       // Upload files to Firebase Storage
       const idFileUrl = await uploadFileToStorage(userId, idFile.assets[0].uri, 'ID');
       const cvFileUrl = await uploadFileToStorage(userId, cvFile.assets[0].uri, 'CV');

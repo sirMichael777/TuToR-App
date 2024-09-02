@@ -5,10 +5,10 @@ import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {doc, getDoc} from "firebase/firestore";
 import {isValidEmail} from "../ValidationUtils/ValidationUtils";
 import {useDispatch} from "react-redux";
-import {setUser} from "../Context/actions/userActions";
+import {setUser} from "../context/actions/userActions";
 
+export default function SignInScreen() {
 
-export default function SignInScreen({ navigation }) {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

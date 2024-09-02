@@ -3,13 +3,13 @@ import Logo from "../assets/Logo.png"
 import {useLayoutEffect} from "react";
 import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {doc, getDoc} from "firebase/firestore";
-import {setUser} from "../Context/actions/userActions";
+import {setUser} from "../context/actions/userActions";
 import {useDispatch} from "react-redux";
 
 const LoadingScreen = ({navigation}) => {
     const dispatch = useDispatch();
 
-    useLayoutEffect(() => {
+     useLayoutEffect(() => {
         checkLoggedUser();
     }, []);
 
@@ -24,11 +24,11 @@ const LoadingScreen = ({navigation}) => {
                     if (userData.role === 'Student') {
                         setTimeout(() => {
                             navigation.replace("MainApp"); // Replace with the student home screen
-                        }, 2000);
+                        }, 5000);
                     } else if (userData.role === 'Tutor') {
                         setTimeout(() => {
                             navigation.replace("TutorMainApp"); // Replace with the tutor home screen
-                        }, 2000);
+                        }, 5000);
                     }
                 }
             } else {
