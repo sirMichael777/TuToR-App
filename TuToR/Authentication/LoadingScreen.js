@@ -24,22 +24,24 @@ const LoadingScreen = ({navigation}) => {
                     if (userData.role === 'Student') {
                         setTimeout(() => {
                             navigation.replace("MainApp"); // Replace with the student home screen
-                        }, 5000);
+                        }, 2000);
                     } else if (userData.role === 'Tutor') {
                         setTimeout(() => {
                             navigation.replace("TutorMainApp"); // Replace with the tutor home screen
-                        }, 5000);
+                        }, 2000);
                     }
                 }
             } else {
-                navigation.replace("WelcomeScreen");
+                setTimeout(() => {
+                    navigation.replace("WelcomeScreen"); // Replace with the tutor home screen
+                }, 6000);
             }
         });
     };
 
     return (
-        <View className="flex items-center justify-center space-y-24">
-            <Image source={Logo} className="w-24 h-24" resizeMode="contain" />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Image source={Logo} style={{ width: 150, height: 150, marginBottom:20 }} resizeMode="contain" />
             <ActivityIndicator size={"large"} color="#00243a" />
         </View>
     );
