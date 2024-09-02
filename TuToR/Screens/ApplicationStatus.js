@@ -21,7 +21,7 @@ export default function ApplicationStatus({ navigation }) {
 
           <TouchableOpacity 
             style={[styles.button, { marginTop: 30 }]} 
-            onPress={() => navigation.navigate('TutorMainApp')}
+            onPress={() => navigation.replace('SignUpScreen')}
           >
             <Text style={styles.buttonText}>OK</Text>
           </TouchableOpacity>

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ImageBackground, StyleSheet, Alert } from 'react-native';
+import {View, Text, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator} from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { FontAwesome } from '@expo/vector-icons';
-import {firebaseStorage, firestoreDB} from "../Config/firebaseConfig";
-import {getDownloadURL, ref, uploadBytes} from "firebase/storage";
+import { firebaseStorage, firestoreDB } from "../Config/firebaseConfig";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { doc, setDoc } from "firebase/firestore";
 
 
 export default function TutorDetails5({ route,navigation }) {
@@ -11,49 +12,69 @@ export default function TutorDetails5({ route,navigation }) {
   const [cvFile, setCvFile] = useState(null);
   const [transcriptFile, setTranscriptFile] = useState(null);
   const {userId} = route.params;
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setloading] = useState(true);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
 
   const uploadDocument = async (setFile, fileType) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'image/*'],
+        type: ['application/pdf', 'application/msword'],
       });
 
       if (!result.canceled) {
-
-        const uploadUrl = await uploadFileToStorage(result.assets[0].uri);
-        setFile(uploadUrl);
+        setFile(result);
         console.log(`${fileType} picked:`, result);
-
       } else{
         setFile(null);
         console.log('Document pick was canceled');
+        setError('Document pick was canceled')
       }
     } catch (error) {
       console.error('Error picking document:', error);
+      setError('Error picking document')
     }
   };
 
   const handleApply = async () => {
     if (!idFile || !cvFile || !transcriptFile) {
-      Alert.alert('Missing Documents', 'Please upload all required documents.');
+      setError('Please upload all required documents.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
       return;
     }
 
     try {
-      navigation.navigate('TermsAndConditions', { userId: userId.user.uid });
+      // Upload files to Firebase Storage
+      const idFileUrl = await uploadFileToStorage(userId, idFile.assets[0].uri, 'ID');
+      const cvFileUrl = await uploadFileToStorage(userId, cvFile.assets[0].uri, 'CV');
+      const transcriptFileUrl = await uploadFileToStorage(userId, transcriptFile.assets[0].uri, 'Transcript');
+
+      // Update the tutor data in Firestore with document URLs
+      await setDoc(doc(firestoreDB, 'Tutors', userId), {
+        idFileUrl,
+        cvFileUrl,
+        transcriptFileUrl,
+        updatedAt: new Date(),
+      }, { merge: true });
+
+      navigation.replace('TermsAndConditions', { userId });
 
     } catch (error) {
       console.error('Error uploading documents:', error.message);
-      Alert.alert('Error', 'Failed to upload documents. Please try again.');
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
+      setError( 'Failed to upload documents. Please try again.');
     }
   };
 
-  const uploadFileToStorage = async (uri) => {
-    const  blob = await new Promise((resolve,reject)=> {
+  const uploadFileToStorage = async (userId,uri,file) => {
 
+    const  blob = await new Promise((resolve,reject)=> {
       const xhr = new XMLHttpRequest();
       xhr.onload = function (){
         resolve(xhr.response);
@@ -68,77 +89,90 @@ export default function TutorDetails5({ route,navigation }) {
     });
 
     try {
-      const storageRef = ref(firebaseStorage,`Documents/doc${Date.now()}`);
-      const result = await uploadBytes(storageRef, blob );
+      const storageRef = ref(firebaseStorage,`Tutors/${userId.name}/${file.name}`);
+      const result = await uploadBytes(storageRef,blob);
       blob.close();
       return await getDownloadURL(storageRef);
+
     }catch (err){
-      Alert.alert("Error:", err.message)
+      setError(err.message);
+      setShowError(true);
+      setInterval(() => {
+        setShowError(false);
+      }, 2000);
     }
   };
 
 
 
+
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={require('../assets/images/LoadingPage.png')}
-        style={styles.background}
-        imageStyle={styles.imageStyle}
-      >
-        <View style={styles.fixedContainer}>
-          <Text style={styles.title}>Upload documents</Text>
-
-          <TouchableOpacity
-            style={[styles.button, idFile && styles.uploadedButton]}
-            onPress={() => uploadDocument(setIdFile, 'ID')}
+      {loading ? ( // Show loading screen if loading is true
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+      ) : (
+          <ImageBackground
+              source={require('../assets/images/LoadingPage.png')}
+              style={styles.background}
+              imageStyle={styles.imageStyle}
           >
-            {idFile ? (
-              <View style={styles.uploadedContainer}>
-                <FontAwesome name="file" size={24} color="white" />
-                <Text style={styles.uploadedText}>{idFile.name}</Text>
-              </View>
-            ) : (
-              <Text style={styles.buttonText}>Upload ID</Text>
-            )}
-          </TouchableOpacity>
+            <View style={styles.fixedContainer}>
+              <Text style={styles.title}>Upload documents</Text>
+              {showError && (<Text style={styles.error}>{error}</Text>)}
+              <TouchableOpacity
+                  style={[styles.button, idFile && styles.uploadedButton]}
+                  onPress={() => uploadDocument(setIdFile, 'ID')}
+              >
+                {idFile ? (
+                    <View style={styles.uploadedContainer}>
+                      <FontAwesome name="file" size={24} color="white" />
+                      <Text style={styles.uploadedText}>{idFile.name}</Text>
+                    </View>
+                ) : (
+                    <Text style={styles.buttonText}>Upload ID</Text>
+                )}
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.button, cvFile && styles.uploadedButton]}
-            onPress={() => uploadDocument(setCvFile, 'CV')}
-          >
-            {cvFile ? (
-              <View style={styles.uploadedContainer}>
-                <FontAwesome name="file" size={24} color="white" />
-                <Text style={styles.uploadedText}>{cvFile.name}</Text>
-              </View>
-            ) : (
-              <Text style={styles.buttonText}>Upload CV</Text>
-            )}
-          </TouchableOpacity>
+              <TouchableOpacity
+                  style={[styles.button, cvFile && styles.uploadedButton]}
+                  onPress={() => uploadDocument(setCvFile, 'CV')}
+              >
+                {cvFile ? (
+                    <View style={styles.uploadedContainer}>
+                      <FontAwesome name="file" size={24} color="white" />
+                      <Text style={styles.uploadedText}>{cvFile.name}</Text>
+                    </View>
+                ) : (
+                    <Text style={styles.buttonText}>Upload CV</Text>
+                )}
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.button, transcriptFile && styles.uploadedButton]}
-            onPress={() => uploadDocument(setTranscriptFile, 'Transcript')}
-          >
-            {transcriptFile ? (
-              <View style={styles.uploadedContainer}>
-                <FontAwesome name="file" size={24} color="white" />
-                <Text style={styles.uploadedText}>{transcriptFile.name}</Text>
-              </View>
-            ) : (
-              <Text style={styles.buttonText}>Upload Transcript</Text>
-            )}
-          </TouchableOpacity>
+              <TouchableOpacity
+                  style={[styles.button, transcriptFile && styles.uploadedButton]}
+                  onPress={() => uploadDocument(setTranscriptFile, 'Transcript')}
+              >
+                {transcriptFile ? (
+                    <View style={styles.uploadedContainer}>
+                      <FontAwesome name="file" size={24} color="white" />
+                      <Text style={styles.uploadedText}>{transcriptFile.name}</Text>
+                    </View>
+                ) : (
+                    <Text style={styles.buttonText}>Upload Transcript</Text>
+                )}
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.button, styles.applyButton]}
-            onPress={handleApply}
-          >
-            <Text style={styles.applyButtonText}>Apply</Text>
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
+              <TouchableOpacity
+                  style={[styles.button, styles.applyButton]}
+                  onPress={handleApply}
+              >
+                <Text style={styles.applyButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
+          )}
     </View>
   );
 }
@@ -171,6 +205,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     fontSize: 20,
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    textAlign: 'center',
   },
   button: {
     backgroundColor: '#F0F0F0',
@@ -205,4 +244,16 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: 'Ubuntu_400Regular',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#080877',
+    fontFamily: 'Ubuntu_400Regular',
+  },
+
 });

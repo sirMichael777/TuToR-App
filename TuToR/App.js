@@ -6,9 +6,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import AppLoading from 'expo-app-loading';
 import { useFonts, Ubuntu_400Regular } from '@expo-google-fonts/ubuntu';
 import {FontAwesome5, Ionicons} from '@expo/vector-icons';
+import {Provider} from "react-redux";
 
-// Importing all the screens
-import LoadingScreen from './Screens/LoadingScreen';
+
+import LoadingScreen from './Authentication/LoadingScreen';
 import WelcomeScreen from './Authentication/WelcomeScreen';
 import SignUpScreen from './Authentication/SignUpScreen';
 import SignInScreen from './Authentication/SignInScreen';
@@ -33,11 +34,14 @@ import EarningsScreen from './Screens/Earning';
 import TutorHomeScreen from './Screens/TutorHomeScreen';
 import TutorSessionScreen from './Screens/TutorSession';
 import AuthTypeScreen from "./Authentication/AuthTypeScreen";
+import Store from "./Context/store";
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+
   const [loadingComplete, setLoadingComplete] = useState(false);
 
   // Load fonts
@@ -62,7 +66,7 @@ export default function App() {
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
-  
+
             if (route.name === 'Home') {
               iconName = focused ? 'home' : 'home-outline';
             } else if (route.name === 'FindTutor') {
@@ -72,7 +76,7 @@ export default function App() {
             } else if (route.name === 'Chat') {
               iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
             }
-  
+
             return <Ionicons name={iconName} size={size} color={color} />;
           },
           tabBarActiveTintColor: 'blue',
@@ -124,11 +128,19 @@ export default function App() {
   // Once loading is complete, show the main app screens
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="WelcomeScreen">
+      <Provider store={Store}>
+      <Stack.Navigator initialRouteName="SplashScreen">
+        {/* Loading Screen*/ }
+        <Stack.Screen
+            name="SplashScreen"
+            component={LoadingScreen}
+            options={{headerShown: false}}
+            />
+
         {/* Welcome Screen */}
-        <Stack.Screen 
-          name="WelcomeScreen" 
-          component={WelcomeScreen} 
+        <Stack.Screen
+          name="WelcomeScreen"
+          component={WelcomeScreen}
           options={{ headerShown: false }}
         />
 
@@ -140,57 +152,57 @@ export default function App() {
 
 
         {/* Sign Up Screen */}
-        <Stack.Screen 
-          name="SignUpScreen" 
-          component={SignUpScreen} 
+        <Stack.Screen
+          name="SignUpScreen"
+          component={SignUpScreen}
           options={{ headerShown: false }}
         />
 
         {/* Sign In Screen */}
-        <Stack.Screen 
-          name="SignInScreen" 
-          component={SignInScreen} 
+        <Stack.Screen
+          name="SignInScreen"
+          component={SignInScreen}
           options={{ headerShown: false }}
         />
 
         {/* Reset Password Screen */}
-        <Stack.Screen 
-          name="ResetPasswordScreen" 
-          component={ResetPasswordScreen} 
+        <Stack.Screen
+          name="ResetPasswordScreen"
+          component={ResetPasswordScreen}
           options={{ headerShown: false }}
         />
 
         {/* Enter Reset Code Screen */}
-        <Stack.Screen 
-          name="EnterResetCodeScreen" 
-          component={EnterResetCodeScreen} 
+        <Stack.Screen
+          name="EnterResetCodeScreen"
+          component={EnterResetCodeScreen}
           options={{ headerShown: false }}
         />
 
         {/* Tutor Details Screens */}
-        <Stack.Screen 
-          name="TutorDetails1" 
-          component={TutorDetails1} 
+        <Stack.Screen
+          name="TutorDetails1"
+          component={TutorDetails1}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="TutorDetails2" 
-          component={TutorDetails2} 
+        <Stack.Screen
+          name="TutorDetails2"
+          component={TutorDetails2}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="TutorDetails3" 
-          component={TutorDetails3} 
+        <Stack.Screen
+          name="TutorDetails3"
+          component={TutorDetails3}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="TutorDetails4" 
-          component={TutorDetails4} 
+        <Stack.Screen
+          name="TutorDetails4"
+          component={TutorDetails4}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="TutorDetails5" 
-          component={TutorDetails5} 
+        <Stack.Screen
+          name="TutorDetails5"
+          component={TutorDetails5}
           options={{ headerShown: false }}
         />
 
@@ -229,7 +241,7 @@ export default function App() {
         options={{ headerShown: false }}
         />
 
-      
+
         {/* Main Application - Bottom Tab Navigation */}
         <Stack.Screen
           name="MainApp"
@@ -244,6 +256,7 @@ export default function App() {
           />
       </Stack.Navigator>
       <StatusBar style="auto" />
+      </Provider>
     </NavigationContainer>
   );
 }

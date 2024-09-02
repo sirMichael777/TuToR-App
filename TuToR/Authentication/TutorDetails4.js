@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, Modal, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import {doc, setDoc} from "firebase/firestore";
 import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {createUserWithEmailAndPassword} from "firebase/auth";
 
 export default function TutorDetails4({ route, navigation }) {
+
   const {role,email, password, firstName, lastName, phoneNumber, gender,address,dateOfBirth } = route.params;
   const [experience, setExperience] = useState('');
   const [languages, setLanguages] = useState([]);
   const [courses, setCourses] = useState('');
   const [rate, setRate] = useState('');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-
+  const [loading, setloading] = useState(true);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
-
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
@@ -54,6 +54,7 @@ export default function TutorDetails4({ route, navigation }) {
 
 
     try {
+      setloading(true);
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       const userId = userCredential.user.uid;
 
@@ -81,10 +82,12 @@ export default function TutorDetails4({ route, navigation }) {
         providerData: userCredential.user.providerData[0] || null,
       }
       await setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data)
+      setloading(false);
 
       navigation.navigate('TutorDetails5', {userId});
     } catch (error) {
       console.error('Error creating user:', error.message);
+      setloading(false);
       setError(error.message);
       setShowError(true);
       setInterval(() => {
@@ -96,8 +99,9 @@ export default function TutorDetails4({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <ImageBackground 
-        source={require('../assets/images/LoadingPage.png')} 
+
+      <ImageBackground
+        source={require('../assets/images/LoadingPage.png')}
         style={styles.background}
         imageStyle={styles.imageStyle}
       >
@@ -128,24 +132,24 @@ export default function TutorDetails4({ route, navigation }) {
             </Text>
           </TouchableOpacity>
 
-          <TextInput 
-            placeholder="Courses" 
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
+          <TextInput
+            placeholder="Courses"
+            style={[styles.input, { paddingVertical: height * 0.02 }]}
+            placeholderTextColor="#a9a9a9"
             value={courses}
             onChangeText={setCourses}
           />
 
-          <TextInput 
-            placeholder="Rate per hour (ZAR)" 
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
+          <TextInput
+            placeholder="Rate per hour (ZAR)"
+            style={[styles.input, { paddingVertical: height * 0.02 }]}
+            placeholderTextColor="#a9a9a9"
             value={rate}
             onChangeText={setRate}
             keyboardType="numeric"
           />
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.button, { paddingVertical: height * 0.02 }]}
             onPress={handleNext}
           >

@@ -29,10 +29,16 @@ const TermsOfUseScreen = ({route, navigation }) => {
                 const collectionName = role === 'Student' ? 'Students' : 'Tutors';
 
                 // Update the acceptedTerms field in the appropriate collection
-                await setDoc(doc(firestoreDB, collectionName, userId), { acceptedTerms: true }, { merge: true });
+                await setDoc(doc(firestoreDB, 'users', userId), { acceptedTerms: true }, { merge: true });
 
-                // Navigate to the SignInScreen after updating the acceptance flag
-                navigation.navigate('SignInScreen');
+
+                if (collectionName === 'Student') {
+                    navigation.navigate('SignInScreen');
+                }else{
+                    navigation.navigate('SignUpScreen');
+                }
+
+
             } else {
                 console.error("User document does not exist");
                 // Handle the case where the user document does not exist

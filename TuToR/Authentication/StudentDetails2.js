@@ -34,7 +34,7 @@ export default function StudentDetails2({ route,navigation }) {
           setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data)
           setDoc(doc(firestoreDB, 'Students', userCredential?.user.uid), data)
 
-          navigation.navigate('TermsAndConditions', { userId: userCredential.user.uid });
+          navigation.replace('TermsAndConditions', { userId: userCredential.user.uid });
         })
         .catch(error => {
           console.error("Error creating user: ", error.message);

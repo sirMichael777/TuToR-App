@@ -1,53 +1,65 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet } from 'react-native';
 import {signInWithEmailAndPassword} from "firebase/auth";
 import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {doc, getDoc} from "firebase/firestore";
 import {isValidEmail} from "../ValidationUtils/ValidationUtils";
+import {useDispatch} from "react-redux";
+import {setUser} from "../Context/actions/userActions";
+
 
 export default function SignInScreen({ navigation }) {
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
-
+  const dispatch = useDispatch();
 
   const handleSignIn = async () => {
-    if(isValidEmail(email) && email !==""){
-      await signInWithEmailAndPassword(firebaseAuth,email, password)
+    if (isValidEmail(email) && email !== "") {
+      await signInWithEmailAndPassword(firebaseAuth, email, password)
           .then((userCredential) => {
-            if(userCredential){
-              console.log("User Id:" ,userCredential?.user.uid);
-              getDoc(doc(firestoreDB,'users',userCredential.user.uid)).then(
+            if (userCredential?.user) {
+              console.log("User Id:", userCredential?.user.uid);
+              getDoc(doc(firestoreDB, 'users', userCredential?.user.uid)).then(
                   (docSnap) => {
-                    if(docSnap.exists()){
+                    if (docSnap.exists()) {
+                      const userData = docSnap.data();
                       console.log("Is signed in");
+                      dispatch(setUser(userData));
+
+                      if (userData.role === 'Student') {
+
+                        navigation.replace("MainApp");
+
+                      } else if (userData.role === 'Tutor') {
+
+                        navigation.replace("TutorMainApp");
+
+                      }
                     }
                   })
             }
           }).catch((error) => {
-
-            if(error.message.includes('invalid-credential')){
+            if (error.message.includes('invalid-credential')) {
               setShowError(true);
-              setError("incorrect password or email")
-            }else{
+              setError("Incorrect password or email");
+            } else {
               setShowError(true);
-              setError('User does not exist')
+              setError('User does not exist');
               console.log(error.message);
             }
             setInterval(() => {
               setShowError(false);
             }, 2000);
-
           })
-    }else{
+    } else {
       setError('Invalid email format.');
       setShowError(true);
-
     }
-
-
   };
+
 
   return (
     <View style={styles.container}>
