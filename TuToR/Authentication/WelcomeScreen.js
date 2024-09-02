@@ -37,7 +37,6 @@ export default function WelcomeScreen({ navigation }) { // Accept navigation as 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: height * 0.05
   },
   background: {
     flex: 1,
@@ -56,7 +55,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.3,
     backgroundColor: '#00243a',
     borderRadius: 25,
-    marginBottom: 15,
+    marginBottom:15,
   },
   buttonText: {
     fontSize: width * 0.04,
@@ -64,10 +63,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Ubuntu_400Regular',
   },
   signInContainer: {
-    marginTop: 10,
+    marginBottom: 50,
   },
   signInText: {
-    fontSize: width * 0.04,
+    fontSize: width * 0.05,
     color: '#00243a',
     fontFamily: 'Ubuntu_400Regular',
   },
