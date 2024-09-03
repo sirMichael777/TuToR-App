@@ -2,7 +2,7 @@ import {Ionicons} from "@expo/vector-icons";
 import StudentHome from "../Screens/StudentHome";
 import FindTutorScreen from "../Screens/FindTutor";
 import SessionScreen from "../Screens/Session";
-import ChatScreen from "../Screens/Chat";
+import ChatScreen from "../Chat/Chat";
 import React from "react";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 

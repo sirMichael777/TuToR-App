@@ -61,7 +61,7 @@ export default function TutorDetails5({ route,navigation }) {
         updatedAt: new Date(),
       }, { merge: true });
 
-      navigation.replace('TermsAndConditions', { userId });
+      navigation.navigate('TermsAndConditions', { userId });
 
     } catch (error) {
       console.error('Error uploading documents:', error.message);
@@ -90,7 +90,7 @@ export default function TutorDetails5({ route,navigation }) {
     });
 
     try {
-      const storageRef = ref(firebaseStorage,`Tutors/${userId.name}/${file.name}`);
+      const storageRef = ref(firebaseStorage,`Tutors/${userId.name}/${userId.email}/${file.name}`);
       const result = await uploadBytes(storageRef,blob);
       blob.close();
       return await getDownloadURL(storageRef);

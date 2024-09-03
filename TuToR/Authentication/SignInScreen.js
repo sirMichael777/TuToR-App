@@ -7,9 +7,7 @@ import {isValidEmail} from "../ValidationUtils/ValidationUtils";
 import {useDispatch} from "react-redux";
 import {setUser} from "../context/actions/userActions";
 
-export default function SignInScreen() {
-
-
+export default function SignInScreen({navigation}) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -99,11 +97,13 @@ export default function SignInScreen() {
             <Text style={styles.buttonText}>Sign in</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('ResetPasswordScreen')}>
+          <TouchableOpacity
+              onPress={() => navigation.navigate('ResetPasswordScreen')}>
             <Text style={styles.linkText}>Forgot password?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('AuthTypeScreen', { action: 'SignUp' })}>
+          <TouchableOpacity onPress={() =>
+              navigation.navigate('AuthTypeScreen', { action: 'SignUp' })}>
             <Text style={styles.linkText}>Don’t have an account? Sign up</Text>
           </TouchableOpacity>
         </View>

@@ -23,6 +23,7 @@ const TermsOfUseScreen = ({route, navigation }) => {
         try {
             const userDoc = await getDoc(doc(firestoreDB, 'users', userId));
             if (userDoc.exists()) {
+
                 const userData = userDoc.data();
                 const role = userData.role; // Get the role attribute from the user document
 
@@ -31,13 +32,11 @@ const TermsOfUseScreen = ({route, navigation }) => {
                 // Update the acceptedTerms field in the appropriate collection
                 await setDoc(doc(firestoreDB, 'users', userId), { acceptedTerms: true }, { merge: true });
 
-
-                if (collectionName === 'Student') {
-                    navigation.navigate('SignInScreen');
-                }else{
-                    navigation.navigate('SignUpScreen');
+                if (collectionName === 'Student' && isScrolledToEnd) {
+                    navigation.replace('SignInScreen');
+                }else if (collectionName === 'Tutors' && isScrolledToEnd) {
+                    navigation.navigate('ApplicationStatus');
                 }
-
 
             } else {
                 console.error("User document does not exist");

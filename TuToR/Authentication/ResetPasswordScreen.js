@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Alert } from 'react-native';
+import {sendPasswordResetEmail} from 'firebase/auth'
+import {firebaseAuth} from "../Config/firebaseConfig";
 
 export default function ResetPasswordScreen({ navigation }) {
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const isValidEmail = (email) => {
-    // Simple email validation regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
-  const handleResetPassword = () => {
-    if (isValidEmail(email)) {
-      // Navigate to the EnterResetCodeScreen if email is valid
-      navigation.navigate('EnterResetCodeScreen');
-    } else {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+  const handlePasswordReset = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(firebaseAuth,email);
+      setLoading(false);
+      Alert.alert('Success', 'Password reset email sent!');
+      navigation.navigate('EnterResetCodeScreen'); // Navigate to reset screen
+    } catch (error) {
+      setLoading(false);
+      console.error('Error resetting password:', error);
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -44,9 +51,10 @@ export default function ResetPasswordScreen({ navigation }) {
 
           <TouchableOpacity 
             style={styles.button}
-            onPress={handleResetPassword}
+            onPress={handlePasswordReset}
+            disabled={loading}
           >
-            <Text style={styles.buttonText}>Send Reset Code</Text>
+            <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send Reset Code'}</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>

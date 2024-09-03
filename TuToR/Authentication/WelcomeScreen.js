@@ -22,7 +22,7 @@ export default function WelcomeScreen({ navigation }) { // Accept navigation as 
           {/* Add navigation to the SignInScreen */}
           <TouchableOpacity 
             style={styles.signInContainer}
-            onPress={() => navigation.navigate('AuthTypeScreen', { action: 'SignIn' })} // Navigate to SignInScreen
+            onPress={() => navigation.navigate('SignInScreen')} // Navigate to SignInScreen
           >
             <Text style={styles.signInText }>
               Already a member? <Text style={styles.signInLink}>Sign in</Text>

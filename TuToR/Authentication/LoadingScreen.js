@@ -24,16 +24,16 @@ const LoadingScreen = ({navigation}) => {
                     if (userData.role === 'Student') {
                         setTimeout(() => {
                             navigation.replace("MainApp"); // Replace with the student home screen
-                        }, 2000);
+                        }, 6000);
                     } else if (userData.role === 'Tutor') {
                         setTimeout(() => {
                             navigation.replace("TutorMainApp"); // Replace with the tutor home screen
-                        }, 2000);
+                        }, 6000);
                     }
                 }
             } else {
                 setTimeout(() => {
-                    navigation.replace("WelcomeScreen"); // Replace with the tutor home screen
+                    navigation.navigate("WelcomeScreen"); // Replace with the tutor home screen
                 }, 6000);
             }
         });

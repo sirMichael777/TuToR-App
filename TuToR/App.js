@@ -8,13 +8,13 @@ import AuthTypeScreen from "./Authentication/AuthTypeScreen";
 import SignUpScreen from "./Authentication/SignUpScreen";
 import SignInScreen from "./Authentication/SignInScreen";
 import ResetPasswordScreen from "./Authentication/ResetPasswordScreen";
-import EnterResetCodeScreen from "./Screens/EnterResetCodeScreen";
+import EnterResetCodeScreen from "./Authentication/EnterResetCodeScreen";
 import TutorDetails1 from "./Authentication/TutorDetails1";
 import TutorDetails2 from "./Authentication/TutorDetails2";
 import TutorDetails3 from "./Authentication/TutorDetails3";
 import TutorDetails4 from "./Authentication/TutorDetails4";
 import TutorDetails5 from "./Authentication/TutorDetails5";
-import ApplicationStatus from "./Screens/ApplicationStatus";
+import ApplicationStatus from "./Authentication/ApplicationStatus";
 import StudentDetails1 from "./Authentication/StudentDetails1";
 import StudentDetails2 from "./Authentication/StudentDetails2";
 import TermsAndConditions from "./Authentication/TermsAndConditions";
@@ -25,6 +25,7 @@ import TutorMainApp from './MainComponents/TutorMain'
 import React from "react";
 import {createStackNavigator} from "@react-navigation/stack";
 import {StatusBar} from "react-native";
+import TutorSearchScreen from "./Chat/TutorSearchScreen";
 
 const Stack = createStackNavigator();
 
@@ -41,6 +42,7 @@ export default () => {
             <Stack.Screen name="SignInScreen" component={SignInScreen} />
             <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />
             <Stack.Screen name="EnterResetCodeScreen" component={EnterResetCodeScreen} />
+              <Stack.Screen name="TutorSearchScreen" component={TutorSearchScreen} />
             <Stack.Screen name="TutorDetails1" component={TutorDetails1} />
             <Stack.Screen name="TutorDetails2" component={TutorDetails2} />
             <Stack.Screen name="TutorDetails3" component={TutorDetails3} />

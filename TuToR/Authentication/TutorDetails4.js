@@ -13,7 +13,6 @@ export default function TutorDetails4({ route, navigation }) {
   const [courses, setCourses] = useState('');
   const [rate, setRate] = useState('');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-  const [loading, setloading] = useState(true);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
   const windowDimensions = Dimensions.get('window');
@@ -54,13 +53,14 @@ export default function TutorDetails4({ route, navigation }) {
 
 
     try {
-      setloading(true);
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       const userId = userCredential.user.uid;
 
       await setDoc(doc(firestoreDB, 'Tutors', userId), {
+        _id: userId,
         firstName,
         lastName,
+        imageUrl: '',
         phoneNumber,
         gender,
         address,
@@ -68,6 +68,9 @@ export default function TutorDetails4({ route, navigation }) {
         experience,
         languages,
         courses,
+        rating: 0,
+        reviews: [],
+        ratingCount: 0,
         rate,
         role,
         createdAt: new Date(),
@@ -75,19 +78,19 @@ export default function TutorDetails4({ route, navigation }) {
 
       const data = {
         _id: userCredential?.user.uid,
+        ImageUrl: '',
         name: firstName,
         lastName: lastName,
         phoneNumber: phoneNumber,
         role: role,
         providerData: userCredential.user.providerData[0] || null,
       }
-      await setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data)
-      setloading(false);
+      await setDoc(doc(firestoreDB, 'users', userId), data)
 
       navigation.navigate('TutorDetails5', {userId});
+
     } catch (error) {
       console.error('Error creating user:', error.message);
-      setloading(false);
       setError(error.message);
       setShowError(true);
       setInterval(() => {
