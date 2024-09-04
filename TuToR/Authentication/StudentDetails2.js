@@ -20,35 +20,38 @@ export default function StudentDetails2({ route,navigation }) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-    setLoading(true);
-    await createUserWithEmailAndPassword(firebaseAuth, email, password)
 
-        .then(userCredential => {
-          const data = {
-            _id: userCredential?.user.uid,
-            name: firstName,
-            ImageUrl: '',
-            Balance: 0,
-            lastName: lastName,
-            phoneNumber: phoneNumber,
-            role: role,
-            providerData: userCredential.user.providerData[0] || null,
-          }
-          setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data)
-          setDoc(doc(firestoreDB, 'Students', userCredential?.user.uid), data)
 
-          setLoading(false); 
-          navigation.navigate('TermsAndConditions', { userId: userCredential.user.uid });
 
-        })
-        .catch(error => {
-          console.error("Error creating user: ", error.message);
-          setLoading(false); 
-          console.error("Error creating user: ", error.message);
-          Alert.alert('Error', error.message);
-        });
+    try {
+      setLoading(true);
+      const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
 
-    Alert.alert('Success', 'Account created successfully!');
+      const data = {
+        _id: userCredential?.user.uid,
+        name: firstName,
+        ImageUrl: '',
+        Balance: 0,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        role: role,
+        acceptedTerms: false,
+        providerData: userCredential.user.providerData[0] || null,
+      };
+
+      // Save the user data in Firestore
+      await setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data);
+      await setDoc(doc(firestoreDB, 'Students', userCredential?.user.uid), data);
+      setLoading(false);
+      navigation.navigate('TermsAndConditions', { userId: userCredential.user.uid });
+
+
+      Alert.alert('Success', 'Account created successfully!');
+    } catch (error) {
+      setLoading(false)
+      console.error("Error creating user: ", error.message);
+      Alert.alert('Error', error.message);
+    }
   };
 
   return (

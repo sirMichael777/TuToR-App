@@ -5,7 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
+
     return (
+
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Home</Text>

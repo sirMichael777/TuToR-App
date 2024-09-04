@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ImageBackground } from 'react-native';
 import {doc, getDoc, setDoc} from "firebase/firestore";
 import {firestoreDB} from "../Config/firebaseConfig";
+import {CommonActions} from "@react-navigation/native";
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,8 +11,8 @@ const TermsOfUseScreen = ({route, navigation }) => {
     const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
     const { userId } = route.params;
 
-    const handleScroll = ({ nativeEvent }) => {
 
+    const handleScroll = ({ nativeEvent }) => {
         const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
         if (layoutMeasurement.height + contentOffset.y >= contentSize.height*0.99) {
             setIsScrolledToEnd(true);
@@ -32,15 +33,15 @@ const TermsOfUseScreen = ({route, navigation }) => {
                 // Update the acceptedTerms field in the appropriate collection
                 await setDoc(doc(firestoreDB, 'users', userId), { acceptedTerms: true }, { merge: true });
 
-                if (collectionName === 'Student' && isScrolledToEnd) {
-                    navigation.replace('SignInScreen');
-                }else if (collectionName === 'Tutors' && isScrolledToEnd) {
-                    navigation.navigate('ApplicationStatus');
+                if (collectionName === 'Students') {
+                    navigation.navigate("SignInScreen")
+                } else if (collectionName === 'Tutors') {
+                    navigation.navigate("ApplicationStatus")
                 }
 
             } else {
                 console.error("User document does not exist");
-                // Handle the case where the user document does not exist
+
             }
         } catch (error) {
             console.error("Error updating terms acceptance: ", error.message);

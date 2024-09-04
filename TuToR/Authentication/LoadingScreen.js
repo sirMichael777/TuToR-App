@@ -20,20 +20,24 @@ const LoadingScreen = ({navigation}) => {
                 if (docSnap.exists()) {
                     const userData = docSnap.data();
                     dispatch(setUser(userData));
-                    // Redirect based on user role
-                    if (userData.role === 'Student') {
-                        setTimeout(() => {
-                            navigation.replace("MainApp"); // Replace with the student home screen
-                        }, 6000);
-                    } else if (userData.role === 'Tutor') {
-                        setTimeout(() => {
-                            navigation.replace("TutorMainApp"); // Replace with the tutor home screen
-                        }, 6000);
+
+                    if(userData.acceptedTerms){
+                        if (userData.role === 'Student') {
+                            setTimeout(() => {
+                                navigation.replace("MainApp"); // Replace with the student home screen
+                            }, 6000);// Replace with the student home screen
+                        } else if (userData.role === 'Tutor') {
+                            setTimeout(() => {
+                                navigation.replace("TutorMainApp"); // Replace with the tutor home screen
+                            }, 6000);  // Replace with the tutor home screen
+                        }
+                    }else{
+                        navigation.navigate('TermsAndConditions', { userId: user.uid });
                     }
                 }
             } else {
                 setTimeout(() => {
-                    navigation.navigate("WelcomeScreen"); // Replace with the tutor home screen
+                    navigation.replace("WelcomeScreen"); // Replace with the tutor home screen
                 }, 6000);
             }
         });

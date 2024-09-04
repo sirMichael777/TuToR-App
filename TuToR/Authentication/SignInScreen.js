@@ -6,6 +6,7 @@ import {doc, getDoc} from "firebase/firestore";
 import {isValidEmail} from "../ValidationUtils/ValidationUtils";
 import {useDispatch} from "react-redux";
 import {setUser} from "../context/actions/userActions";
+import {CommonActions} from "@react-navigation/native";
 
 export default function SignInScreen({navigation}) {
   const [email, setEmail] = useState('');
@@ -31,11 +32,21 @@ export default function SignInScreen({navigation}) {
 
                       if (userData.role === 'Student') {
 
-                        navigation.replace("MainApp");
+                        navigation.dispatch(
+                            CommonActions.reset({
+                              index: 0,
+                              routes: [{ name: 'MainApp' }],
+                            })
+                        );
 
                       } else if (userData.role === 'Tutor') {
 
-                        navigation.replace("TutorMainApp");
+                        navigation.dispatch(
+                            CommonActions.reset({
+                              index: 0,
+                              routes: [{ name: 'TutorMainApp' }],
+                            })
+                        );
 
                       }
                     }

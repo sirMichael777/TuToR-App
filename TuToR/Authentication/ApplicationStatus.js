@@ -1,10 +1,24 @@
-import React from 'react';
-import { View, Text, ImageBackground, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import React, {useEffect} from 'react';
+import {View, Text, ImageBackground, StyleSheet, Dimensions, TouchableOpacity, BackHandler} from 'react-native';
 
 export default function ApplicationStatus({ navigation }) {
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
+
+  useEffect(() => {
+    const backAction = () => {
+      // Returning true disables the back button
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -21,7 +35,8 @@ export default function ApplicationStatus({ navigation }) {
 
           <TouchableOpacity 
             style={[styles.button, { marginTop: 30 }]} 
-            onPress={() => navigation.replace('SignUpScreen')}
+            onPress={() => navigation.replace('SignInScreen')
+          }
           >
             <Text style={styles.buttonText}>OK</Text>
           </TouchableOpacity>
