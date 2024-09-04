@@ -12,7 +12,7 @@ export default function TutorDetails5({ route,navigation }) {
   const [cvFile, setCvFile] = useState(null);
   const [transcriptFile, setTranscriptFile] = useState(null);
   const {userId} = route.params;
-  const [loading, setloading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
 
@@ -47,6 +47,7 @@ export default function TutorDetails5({ route,navigation }) {
     }
 
     try {
+      setLoading(true);
 
       // Upload files to Firebase Storage
       const idFileUrl = await uploadFileToStorage(userId, idFile.assets[0].uri, 'ID');
@@ -61,15 +62,17 @@ export default function TutorDetails5({ route,navigation }) {
         updatedAt: new Date(),
       }, { merge: true });
 
+      setLoading(false);
       navigation.navigate('TermsAndConditions', { userId });
 
     } catch (error) {
+      setLoading(false); 
       console.error('Error uploading documents:', error.message);
       setShowError(true);
       setInterval(() => {
         setShowError(false);
       }, 2000);
-      setError( 'Failed to upload documents. Please try again.');
+      setError('Failed to upload documents. Please try again.');
     }
   };
 
@@ -109,71 +112,76 @@ export default function TutorDetails5({ route,navigation }) {
 
   return (
     <View style={styles.container}>
-      {loading ? ( // Show loading screen if loading is true
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text style={styles.loadingText}>Loading...</Text>
-          </View>
+      {loading ? ( 
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.loadingText}>Processing documents...</Text> 
+        </View>
       ) : (
-          <ImageBackground
-              source={require('../assets/images/LoadingPage.png')}
-              style={styles.background}
-              imageStyle={styles.imageStyle}
-          >
-            <View style={styles.fixedContainer}>
-              <Text style={styles.title}>Upload documents</Text>
-              {showError && (<Text style={styles.error}>{error}</Text>)}
-              <TouchableOpacity
-                  style={[styles.button, idFile && styles.uploadedButton]}
-                  onPress={() => uploadDocument(setIdFile, 'ID')}
-              >
-                {idFile ? (
-                    <View style={styles.uploadedContainer}>
-                      <FontAwesome name="file" size={24} color="white" />
-                      <Text style={styles.uploadedText}>{idFile.name}</Text>
-                    </View>
-                ) : (
-                    <Text style={styles.buttonText}>Upload ID</Text>
-                )}
-              </TouchableOpacity>
+        <ImageBackground
+          source={require('../assets/images/LoadingPage.png')}
+          style={styles.background}
+          imageStyle={styles.imageStyle}
+        >
+          <View style={styles.fixedContainer}>
+            <Text style={styles.title}>Upload documents</Text>
+            {showError && (<Text style={styles.error}>{error}</Text>)}
+            <TouchableOpacity
+              style={[styles.button, idFile && styles.uploadedButton]}
+              onPress={() => uploadDocument(setIdFile, 'ID')}
+            >
+              {idFile ? (
+                <View style={styles.uploadedContainer}>
+                  <FontAwesome name="file" size={24} color="white" />
+                  <Text style={styles.uploadedText}>{idFile.name}</Text>
+                </View>
+              ) : (
+                <Text style={styles.buttonText}>Upload ID</Text>
+              )}
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                  style={[styles.button, cvFile && styles.uploadedButton]}
-                  onPress={() => uploadDocument(setCvFile, 'CV')}
-              >
-                {cvFile ? (
-                    <View style={styles.uploadedContainer}>
-                      <FontAwesome name="file" size={24} color="white" />
-                      <Text style={styles.uploadedText}>{cvFile.name}</Text>
-                    </View>
-                ) : (
-                    <Text style={styles.buttonText}>Upload CV</Text>
-                )}
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, cvFile && styles.uploadedButton]}
+              onPress={() => uploadDocument(setCvFile, 'CV')}
+            >
+              {cvFile ? (
+                <View style={styles.uploadedContainer}>
+                  <FontAwesome name="file" size={24} color="white" />
+                  <Text style={styles.uploadedText}>{cvFile.name}</Text>
+                </View>
+              ) : (
+                <Text style={styles.buttonText}>Upload CV</Text>
+              )}
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                  style={[styles.button, transcriptFile && styles.uploadedButton]}
-                  onPress={() => uploadDocument(setTranscriptFile, 'Transcript')}
-              >
-                {transcriptFile ? (
-                    <View style={styles.uploadedContainer}>
-                      <FontAwesome name="file" size={24} color="white" />
-                      <Text style={styles.uploadedText}>{transcriptFile.name}</Text>
-                    </View>
-                ) : (
-                    <Text style={styles.buttonText}>Upload Transcript</Text>
-                )}
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, transcriptFile && styles.uploadedButton]}
+              onPress={() => uploadDocument(setTranscriptFile, 'Transcript')}
+            >
+              {transcriptFile ? (
+                <View style={styles.uploadedContainer}>
+                  <FontAwesome name="file" size={24} color="white" />
+                  <Text style={styles.uploadedText}>{transcriptFile.name}</Text>
+                </View>
+              ) : (
+                <Text style={styles.buttonText}>Upload Transcript</Text>
+              )}
+            </TouchableOpacity>
 
-              <TouchableOpacity
-                  style={[styles.button, styles.applyButton]}
-                  onPress={handleApply}
-              >
+            <TouchableOpacity
+              style={[styles.button, styles.applyButton]}
+              onPress={handleApply}
+              disabled={loading} 
+            >
+              {loading ? ( 
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
                 <Text style={styles.applyButtonText}>Apply</Text>
-              </TouchableOpacity>
-            </View>
-          </ImageBackground>
-          )}
+              )}
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
+      )}
     </View>
   );
 }
@@ -253,7 +261,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#080877',
+    color: '#FFFFFF',
     fontFamily: 'Ubuntu_400Regular',
   },
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator } from 'react-native';
 import {signInWithEmailAndPassword} from "firebase/auth";
 import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {doc, getDoc} from "firebase/firestore";
@@ -12,10 +12,12 @@ export default function SignInScreen({navigation}) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
   const handleSignIn = async () => {
     if (isValidEmail(email) && email !== "") {
+      setLoading(true);
       await signInWithEmailAndPassword(firebaseAuth, email, password)
           .then((userCredential) => {
             if (userCredential?.user) {
@@ -37,9 +39,11 @@ export default function SignInScreen({navigation}) {
 
                       }
                     }
-                  })
+                    setLoading(false);
+                  });
             }
           }).catch((error) => {
+            setLoading(false);
             if (error.message.includes('invalid-credential')) {
               setShowError(true);
               setError("Incorrect password or email");
@@ -50,7 +54,7 @@ export default function SignInScreen({navigation}) {
             }
             setInterval(() => {
               setShowError(false);
-            }, 2000);
+            }, 5000);
           })
     } else {
       setError('Invalid email format.');
@@ -93,8 +97,13 @@ export default function SignInScreen({navigation}) {
           <TouchableOpacity 
             style={styles.button}
             onPress={handleSignIn}
+            disabled={loading} //// Disable button when loading
           >
-            <Text style={styles.buttonText}>Sign in</Text>
+            {loading ? ( //// Show loading spinner when loading
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Sign in</Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity

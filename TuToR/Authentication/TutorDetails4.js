@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Modal, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Modal, ScrollView, ActivityIndicator } from 'react-native'; //// Added ActivityIndicator import
 import RNPickerSelect from 'react-native-picker-select';
-import {doc, setDoc} from "firebase/firestore";
-import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
-import {createUserWithEmailAndPassword} from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { firebaseAuth, firestoreDB } from "../Config/firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function TutorDetails4({ route, navigation }) {
 
-  const {role,email, password, firstName, lastName, phoneNumber, gender,address,dateOfBirth } = route.params;
+  const { role, email, password, firstName, lastName, phoneNumber, gender, address, dateOfBirth } = route.params;
   const [experience, setExperience] = useState('');
-  const [languages, setLanguages] = useState([]);
-  const [courses, setCourses] = useState('');
+  const [languages, setLanguages] = useState([]); 
+  const [courses, setCourses] = useState([]); //// Updated to array to allow multiple course selections
   const [rate, setRate] = useState('');
   const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [showCourseModal, setShowCourseModal] = useState(false); //// Added for courses modal
+  const [loading, setLoading] = useState(false); //// Added loading state
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
   const windowDimensions = Dimensions.get('window');
@@ -33,6 +35,33 @@ export default function TutorDetails4({ route, navigation }) {
     { id: 'af', name: 'Afrikaans' }, 
   ];
 
+  //// Alphabetically sorted list of courses
+  const courseOptions = [ //// Added courses as per the user's request
+    { id: 'ACC1006F/S', name: 'ACC1006F/S' },
+    { id: 'AGE1002S', name: 'AGE1002S' },
+    { id: 'AST1000S', name: 'AST1000S' },
+    { id: 'BIO1000F', name: 'BIO1000F' },
+    { id: 'BIO1004S', name: 'BIO1004S' },
+    { id: 'CEM1000W', name: 'CEM1000W' },
+    { id: 'CSC1015F/S', name: 'CSC1015F/S' },
+    { id: 'CSC1016S', name: 'CSC1016S' },
+    { id: 'EGS1003S', name: 'EGS1003S' },
+    { id: 'FTX1005F/S', name: 'FTX1005F/S' },
+    { id: 'GEO1009F', name: 'GEO1009F' },
+    { id: 'MAM1000W', name: 'MAM1000W' },
+    { id: 'MAM1019H', name: 'MAM1019H' },
+    { id: 'MAM1031F', name: 'MAM1031F' },
+    { id: 'MAM1032S', name: 'MAM1032S' },
+    { id: 'MAM1043H', name: 'MAM1043H' },
+    { id: 'MAM1044H', name: 'MAM1044H' },
+    { id: 'PHY1004W', name: 'PHY1004W' },
+    { id: 'PHY1031F', name: 'PHY1031F' },
+    { id: 'STA1000F/S', name: 'STA1000F/S' },
+    { id: 'STA1006S', name: 'STA1006S' },
+    { id: 'STA1007S', name: 'STA1007S' },
+    // Add more courses as needed
+  ];
+
   const handleLanguageSelection = (language) => {
     if (languages.includes(language)) {
       setLanguages(languages.filter((lang) => lang !== language));
@@ -41,8 +70,16 @@ export default function TutorDetails4({ route, navigation }) {
     }
   };
 
+  const handleCourseSelection = (course) => { //// Added course selection logic
+    if (courses.includes(course)) {
+      setCourses(courses.filter((c) => c !== course));
+    } else {
+      setCourses([...courses, course]);
+    }
+  };
+
   const handleNext = async () => {
-    if (!experience || !languages.length || !courses || !rate) {
+    if (!experience || !languages.length || !courses.length || !rate) {
       setError('Please fill in all fields.');
       setShowError(true);
       setInterval(() => {
@@ -51,8 +88,8 @@ export default function TutorDetails4({ route, navigation }) {
       return;
     }
 
-
     try {
+      setLoading(true); //// Start loading
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       const userId = userCredential.user.uid;
 
@@ -85,11 +122,13 @@ export default function TutorDetails4({ route, navigation }) {
         role: role,
         providerData: userCredential.user.providerData[0] || null,
       }
-      await setDoc(doc(firestoreDB, 'users', userId), data)
+      await setDoc(doc(firestoreDB, 'users', userId), data);
 
-      navigation.navigate('TutorDetails5', {userId});
+      setLoading(false); //// Stop loading after success
+      navigation.navigate('TutorDetails5', { userId });
 
     } catch (error) {
+      setLoading(false); //// Stop loading on error
       console.error('Error creating user:', error.message);
       setError(error.message);
       setShowError(true);
@@ -97,7 +136,6 @@ export default function TutorDetails4({ route, navigation }) {
         setShowError(false);
       }, 2000);
     }
-
   };
 
   return (
@@ -135,13 +173,14 @@ export default function TutorDetails4({ route, navigation }) {
             </Text>
           </TouchableOpacity>
 
-          <TextInput
-            placeholder="Courses"
-            style={[styles.input, { paddingVertical: height * 0.02 }]}
-            placeholderTextColor="#a9a9a9"
-            value={courses}
-            onChangeText={setCourses}
-          />
+          <TouchableOpacity
+            style={[styles.input, styles.languageInput]} //// Reusing style for courses
+            onPress={() => setShowCourseModal(true)} //// Added for showing course modal
+          >
+            <Text style={styles.languageText}>
+              {courses.length > 0 ? courses.join(', ') : 'Courses'}
+            </Text>
+          </TouchableOpacity>
 
           <TextInput
             placeholder="Rate per hour (ZAR)"
@@ -155,8 +194,13 @@ export default function TutorDetails4({ route, navigation }) {
           <TouchableOpacity
             style={[styles.button, { paddingVertical: height * 0.02 }]}
             onPress={handleNext}
+            disabled={loading} //// Disable button when loading
           >
-            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Next</Text>
+            {loading ? ( //// Show loading spinner when loading
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Next</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ImageBackground>
@@ -187,6 +231,39 @@ export default function TutorDetails4({ route, navigation }) {
             <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setShowLanguageModal(false)}
+            >
+              <Text style={styles.closeButtonText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Course Selection Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showCourseModal} //// Added course modal visibility
+        onRequestClose={() => setShowCourseModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Courses</Text>
+            <Text style={styles.modalSubtitle}>You can select multiple courses</Text>
+            <ScrollView>
+              {courseOptions.map((course) => (
+                <TouchableOpacity
+                  key={course.id}
+                  onPress={() => handleCourseSelection(course.name)} //// Updated to handle course selection
+                  style={styles.modalOption}
+                >
+                  <Text style={styles.languageText}>{course.name}</Text>
+                  {courses.includes(course.name) && <Text style={styles.checkMark}>✓</Text>}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowCourseModal(false)}
             >
               <Text style={styles.closeButtonText}>Done</Text>
             </TouchableOpacity>
@@ -327,4 +404,3 @@ const styles = StyleSheet.create({
     fontFamily: 'Ubuntu_400Regular',
   },
 });
-

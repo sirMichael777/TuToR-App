@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, ActivityIndicator } from 'react-native';
 import {createUserWithEmailAndPassword} from "firebase/auth";
 import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {doc, setDoc} from "firebase/firestore";
@@ -9,6 +9,7 @@ export default function StudentDetails2({ route,navigation }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
@@ -19,7 +20,7 @@ export default function StudentDetails2({ route,navigation }) {
       Alert.alert('Error', 'Please fill in all fields.');
       return;
     }
-
+    setLoading(true);
     await createUserWithEmailAndPassword(firebaseAuth, email, password)
 
         .then(userCredential => {
@@ -36,12 +37,15 @@ export default function StudentDetails2({ route,navigation }) {
           setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data)
           setDoc(doc(firestoreDB, 'Students', userCredential?.user.uid), data)
 
+          setLoading(false); 
           navigation.navigate('TermsAndConditions', { userId: userCredential.user.uid });
 
         })
         .catch(error => {
           console.error("Error creating user: ", error.message);
-          // Handle error (e.g., display error message)
+          setLoading(false); 
+          console.error("Error creating user: ", error.message);
+          Alert.alert('Error', error.message);
         });
 
     Alert.alert('Success', 'Account created successfully!');
@@ -85,8 +89,13 @@ export default function StudentDetails2({ route,navigation }) {
           <TouchableOpacity 
             style={[styles.button, { paddingVertical: height * 0.02 }]}
             onPress={handleCreateAccount}
+            disabled={loading}
           >
-            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Create Account</Text>
+            {loading ? ( //// Show loading spinner when loading
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Create Account</Text>
+              )}
           </TouchableOpacity>
         </View>
       </ImageBackground>
