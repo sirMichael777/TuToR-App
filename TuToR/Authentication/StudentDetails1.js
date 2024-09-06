@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions} from 'react-native';
+import {
+  Platform,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+  Dimensions,
+  KeyboardAvoidingView, ScrollView
+} from 'react-native';
 import {isStrongPassword, isValidEmail} from "../ValidationUtils/ValidationUtils";
 
 
@@ -57,57 +67,63 @@ export default function StudentDetails1({ route ,navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground 
-        source={require('../assets/images/LoadingPage.png')} 
-        style={styles.background}
-        imageStyle={styles.imageStyle}
+      <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.container}
       >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
 
-        <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
-
-          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Create your account</Text>
-
-          {showError && (<Text style={styles.error}>{error}</Text>)}
-          <TextInput 
-            placeholder="Email" 
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          
-          <TextInput 
-            placeholder="Password" 
-            secureTextEntry 
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
-            value={password}
-            onChangeText={setPassword}
-          />
-          
-          <TextInput 
-            placeholder="Re-enter Password" 
-            secureTextEntry 
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-
-          <TouchableOpacity 
-            style={[styles.button, { paddingVertical: height * 0.02 }]}
-            onPress={handleNext}
+          <ImageBackground
+              source={require('../assets/images/LoadingPage.png')}
+              style={styles.background}
+              imageStyle={styles.imageStyle}
           >
-            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Next</Text>
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
-    </View>
+            <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
+
+              <Text style={[styles.title, { fontSize: width * 0.05 }]}>Create your account</Text>
+
+              {showError && (<Text style={styles.error}>{error}</Text>)}
+              <TextInput
+                  placeholder="Email"
+                  style={[styles.input, { paddingVertical: height * 0.02 }]}
+                  placeholderTextColor="#a9a9a9"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+              />
+
+              <TextInput
+                  placeholder="Password"
+                  secureTextEntry
+                  style={[styles.input, { paddingVertical: height * 0.02 }]}
+                  placeholderTextColor="#a9a9a9"
+                  value={password}
+                  onChangeText={setPassword}
+              />
+
+              <TextInput
+                  placeholder="Re-enter Password"
+                  secureTextEntry
+                  style={[styles.input, { paddingVertical: height * 0.02 }]}
+                  placeholderTextColor="#a9a9a9"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+              />
+
+              <TouchableOpacity
+                  style={[styles.button, { paddingVertical: height * 0.02 }]}
+                  onPress={handleNext}
+              >
+                <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Next</Text>
+              </TouchableOpacity>
+            </View>
+          </ImageBackground>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
