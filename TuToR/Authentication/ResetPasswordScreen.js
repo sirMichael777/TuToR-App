@@ -13,18 +13,21 @@ export default function ResetPasswordScreen({ navigation }) {
       Alert.alert('Error', 'Please enter your email.');
       return;
     }
+
     setLoading(true);
+
     try {
-      await sendPasswordResetEmail(firebaseAuth,email);
+      await sendPasswordResetEmail(firebaseAuth, email); // Pass actionCodeSettings
       setLoading(false);
       Alert.alert('Success', 'Password reset email sent!');
-      navigation.navigate('EnterResetCodeScreen'); // Navigate to reset screen
+      navigation.navigate('SignInScreen'); // Navigate to reset screen
     } catch (error) {
       setLoading(false);
       console.error('Error resetting password:', error);
       Alert.alert('Error', error.message);
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -54,7 +57,7 @@ export default function ResetPasswordScreen({ navigation }) {
             onPress={handlePasswordReset}
             disabled={loading}
           >
-            <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send Reset Code'}</Text>
+            <Text style={styles.buttonText}>{loading ? 'Sending...' : 'Send link'}</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
