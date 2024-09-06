@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ImageBackground } from 'react-native';
 import {doc, getDoc, setDoc} from "firebase/firestore";
-import {firestoreDB} from "../Config/firebaseConfig";
-import {CommonActions} from "@react-navigation/native";
+import {firestoreDB,firebaseAuth} from "../Config/firebaseConfig";
+import {signOut} from 'firebase/auth'
 
 const { width, height } = Dimensions.get('window');
 
@@ -33,9 +33,13 @@ const TermsOfUseScreen = ({route, navigation }) => {
                 // Update the acceptedTerms field in the appropriate collection
                 await setDoc(doc(firestoreDB, 'users', userId), { acceptedTerms: true }, { merge: true });
 
-                if (collectionName === 'Students') {
-                    navigation.navigate("SignInScreen")
-                } else if (collectionName === 'Tutors') {
+                if (collectionName === 'Students' && isScrolledToEnd ) {
+                    try {
+                        await signOut(firebaseAuth); // Sign out from Firebase authentication
+                    } catch (error) {
+                        console.error('Error signing out:', error.message); // Handle any error during sign out
+                    }
+                } else if (collectionName === 'Tutors' && isScrolledToEnd) {
                     navigation.navigate("ApplicationStatus")
                 }
 
