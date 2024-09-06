@@ -15,90 +15,128 @@ import { collection, getDocs } from 'firebase/firestore';
 import { firestoreDB } from '../Config/firebaseConfig';
 
 const TutorSearchScreen = ({ navigation }) => {
-    const [tutors, setTutors] = useState([]);
+    const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [loading, setLoading] = useState(true); // State to manage loading status
+    const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState('All'); // Filter state for Tutors or Students
+
 
     useEffect(() => {
-        fetchTutors();
+        fetchUsers();
     }, []);
 
-    const fetchTutors = async () => {
+    const fetchUsers = async () => {
         try {
-            const querySnapshot = await getDocs(collection(firestoreDB, 'Tutors'));
-            const tutorList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setTutors(tutorList);
+            const querySnapshot = await getDocs(collection(firestoreDB, 'users'));
+            const userList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setUsers(userList);
         } catch (error) {
-            console.error('Error fetching tutors:', error);
+            console.error('Error fetching users:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredTutors = tutors.filter(tutor =>
-        tutor.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tutor.lastName.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredUsers = users.filter(user => {
 
-    const TutorCard = ({ tutor }) => (
-        <TouchableOpacity style={styles.tutorCard} onPress={() => navigation.navigate('ChatScreen', { tutorId: tutor.id })}>
-            {tutor.imageUrl && tutor.imageUrl !== '' ? (
+        const matchesSearchQuery =
+            user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.lastName.toLowerCase().includes(searchQuery.toLowerCase());
+
+        // If filter is 'All', show all users
+        if (filter === 'All') {
+            return matchesSearchQuery;
+        }
+
+        // Otherwise, filter based on the selected role
+        return matchesSearchQuery && user.role === filter;
+    });
+
+    const handleFilterToggle = (selectedFilter) => {
+        if (filter === selectedFilter) {
+            // If the same filter is clicked again, reset to 'All'
+            setFilter('All');
+        } else {
+            // Otherwise, set the filter to the selected one
+            setFilter(selectedFilter);
+        }
+    };
+
+    const UserCard = ({ user }) => (
+        <TouchableOpacity style={styles.userCard} onPress={() => navigation.replace('ChatScreen', { user: user})}>
+            {user.imageUrl && user.imageUrl !== '' ? (
                 <Image
-                    source={{ uri: tutor.imageUrl }}
-                    style={styles.tutorImage}
+                    source={{ uri: user.imageUrl }}
+                    style={styles.userImage}
                 />
             ) : (
-                <Ionicons name="person-circle" size={50} color="#ccc" style={styles.tutorIcon} />
+                <Ionicons name="person-circle" size={50} color="#ccc" style={styles.userIcon} />
             )}
-            <View style={styles.tutorContent}>
-                <Text style={styles.tutorName}>{`${tutor.firstName} ${tutor.lastName}`}</Text>
-                <View style={styles.ratingContainer}>
-                    <Ionicons name="star" size={16} color="#FFD700" />
-                    <Text style={styles.ratingText}>{`${tutor.rating} (${tutor.ratingCount} ratings)`}</Text>
-                </View>
+            <View style={styles.userContent}>
+                <Text style={styles.userName}>{`${user.name} ${user.lastName}`}</Text>
+                {user.role === 'Tutor' && (
+                    <>
+                        <View style={styles.ratingContainer}>
+                            <Ionicons name="star" size={16} color="#FFD700" />
+                            <Text style={styles.ratingText}>{`${user.rating || 0} (${user.ratingCount || 0} ratings)`}</Text>
+                        </View>
+                        <Text style={styles.userRate}>{`R${user.rate || 0}/hr`}</Text>
+                    </>
+                )}
             </View>
-            <Text style={styles.tutorRate}>{`R${tutor.rate}/hr`}</Text>
         </TouchableOpacity>
     );
 
     return (
         <SafeAreaView style={styles.container}>
-                <View style={styles.headerContainer}>
-                    <Ionicons name="arrow-back-outline" size={28} color="#00243a" onPress={() => navigation.goBack()} />
-                    <Text style={styles.headerTitle}>Chat</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-                        <Ionicons name="person-circle-outline" size={30} color="#00243a" />
-                    </TouchableOpacity>
+            <View style={styles.headerContainer}>
+                <Ionicons name="arrow-back-outline" size={28} color="#00243a" onPress={() => navigation.goBack()} />
+                <Text style={styles.headerTitle}>Chat</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+                    <Ionicons name="person-circle-outline" size={30} color="#00243a" />
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.searchContainer}>
+                <Ionicons name="search-outline" size={20} color="#00243a" />
+                <TextInput
+                    placeholder="Search for User"
+                    placeholderTextColor="#a9a9a9"
+                    style={styles.searchInput}
+                    value={searchQuery}
+                    onChangeText={text => setSearchQuery(text)}
+                />
+            </View>
+
+            {/* Filter buttons for Tutors and Students */}
+            <View style={styles.filterContainer}>
+                <TouchableOpacity
+                    style={[styles.filterButton,filter === 'Student' && styles.activeFilterButton]}
+                    onPress={() => handleFilterToggle('Student')}
+                >
+                    <Text style={[styles.filterButtonText, filter === 'Student' && styles.activeFilterButtonText]}>Students</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.filterButton, filter === 'Tutor' && styles.activeFilterButton]}
+                    onPress={() => handleFilterToggle('Tutor')}
+                >
+                    <Text style={[styles.filterButtonText, filter === 'Tutor' && styles.activeFilterButtonText]}>Tutors</Text>
+                </TouchableOpacity>
+            </View>
+
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#00243a" />
+                    <Text style={styles.loadingText}>Fetching users...</Text>
                 </View>
-
-                <View style={styles.searchContainer}>
-                    <Ionicons name="search-outline" size={20} color="#00243a" />
-                    <TextInput
-                        placeholder="Search for Tutor"
-                        placeholderTextColor="#a9a9a9"
-                        style={styles.searchInput}
-                        value={searchQuery}
-                        onChangeText={text => setSearchQuery(text)}
-                    />
-                </View>
-
-                    {loading ? (
-                        // Display ActivityIndicator while loading
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#00243a" />
-                            <Text style={styles.loadingText}>Fetching tutors...</Text>
-                        </View>
-                    ) : (
-                        <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-                            {filteredTutors.map(tutor => (
-                                <TutorCard key={tutor.id} tutor={tutor} />
-                            ))}
-                        </ScrollView>
-                    )}
-
-
+            ) : (
+                <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+                    {filteredUsers.map(user => (
+                        <UserCard key={user.id} user={user} />
+                    ))}
+                </ScrollView>
+            )}
         </SafeAreaView>
-
     );
 };
 
@@ -106,9 +144,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff',
-        marginTop: 10,
     },
-
     headerContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -122,7 +158,6 @@ const styles = StyleSheet.create({
         color: '#00243a',
         fontWeight: 'bold',
     },
-
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -137,7 +172,27 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#00243a',
     },
-
+    filterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginBottom: 10,
+    },
+    filterButton: {
+        backgroundColor: '#f0f0f0',
+        borderRadius: 20,
+        paddingVertical: 8,
+        paddingHorizontal: 20,
+        marginHorizontal: 5,
+    },
+    activeFilterButton: {
+        backgroundColor: '#00243a',
+    },
+    filterButtonText: {
+        color: '#00243a',
+    },
+    activeFilterButtonText: {
+        color: '#ffffff',
+    },
     scrollViewContainer: {
         paddingVertical: 10,
     },
@@ -151,7 +206,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#00243a',
     },
-    tutorCard: {
+    userCard: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#f0f8ff',
@@ -160,13 +215,13 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         borderRadius: 10,
     },
-    tutorImage: {
+    userImage: {
         width: 50,
         height: 50,
         borderRadius: 25,
         marginRight: 10,
     },
-    tutorIcon: {
+    userIcon: {
         width: 50,
         height: 50,
         borderRadius: 25,
@@ -174,10 +229,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 10,
     },
-    tutorContent: {
+    userContent: {
         flex: 1,
     },
-    tutorName: {
+    userName: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#00243a',
@@ -192,7 +247,7 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#4a4a4a',
     },
-    tutorRate: {
+    userRate: {
         fontSize: 14,
         color: '#00243a',
     },
