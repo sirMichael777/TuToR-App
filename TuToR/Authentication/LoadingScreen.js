@@ -44,7 +44,7 @@ const LoadingScreen = ({navigation}) => {
                 }
             } else {
                 setTimeout(() => {
-                    navigation.replace("WelcomeScreen"); // Replace with the tutor home screen
+                    navigation.replace("SignInScreen"); // Replace with the tutor home screen
                 }, 2000);
             }
         });
