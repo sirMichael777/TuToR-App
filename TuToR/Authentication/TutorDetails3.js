@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  Platform,
+  KeyboardAvoidingView, ScrollView
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import RNPickerSelect from 'react-native-picker-select';
 
@@ -34,7 +45,11 @@ export default function TutorDetails3({ route, navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+      <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <ImageBackground 
         source={require('../assets/images/LoadingPage.png')} 
         style={styles.background} 
@@ -93,11 +108,12 @@ export default function TutorDetails3({ route, navigation }) {
             style={[styles.button, { paddingVertical: height * 0.02 }]}
             onPress={handleNext}
           >
-            <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Next</Text>
+            <Text style={[styles.NextButton, { fontSize: width * 0.04 }]}>Next</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 
@@ -163,9 +179,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#010202',
     fontFamily: 'Ubuntu_400Regular',
   },
+  NextButton:{
+    color: '#FFFFFF',
+    fontFamily: 'Ubuntu_400Regular',
+  }
+
 });
 
 const pickerSelectStyles = StyleSheet.create({

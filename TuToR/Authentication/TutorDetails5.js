@@ -11,7 +11,8 @@ export default function TutorDetails5({ route,navigation }) {
   const [idFile, setIdFile] = useState(null);
   const [cvFile, setCvFile] = useState(null);
   const [transcriptFile, setTranscriptFile] = useState(null);
-  const {userId} = route.params;
+  const {userDets} = route.params;
+  const userId = userDets._id;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
@@ -50,9 +51,9 @@ export default function TutorDetails5({ route,navigation }) {
       setLoading(true);
 
       // Upload files to Firebase Storage
-      const idFileUrl = await uploadFileToStorage(userId, idFile.assets[0].uri, 'ID');
-      const cvFileUrl = await uploadFileToStorage(userId, cvFile.assets[0].uri, 'CV');
-      const transcriptFileUrl = await uploadFileToStorage(userId, transcriptFile.assets[0].uri, 'Transcript');
+      const idFileUrl = await uploadFileToStorage( idFile.assets[0].uri, 'ID');
+      const cvFileUrl = await uploadFileToStorage( cvFile.assets[0].uri, 'CV');
+      const transcriptFileUrl = await uploadFileToStorage( transcriptFile.assets[0].uri, 'Transcript');
 
       // Update the tutor data in Firestore with document URLs
       await setDoc(doc(firestoreDB, 'Tutors', userId), {
@@ -76,7 +77,7 @@ export default function TutorDetails5({ route,navigation }) {
     }
   };
 
-  const uploadFileToStorage = async (userId,uri,file) => {
+  const uploadFileToStorage = async (uri,file) => {
 
     const  blob = await new Promise((resolve,reject)=> {
       const xhr = new XMLHttpRequest();
@@ -93,7 +94,8 @@ export default function TutorDetails5({ route,navigation }) {
     });
 
     try {
-      const storageRef = ref(firebaseStorage,`Tutors/${userId.name}/${userId.email}/${file.name}`);
+
+      const storageRef = ref(firebaseStorage,`Tutors/${userDets._id}/${userDets.name}/${file}`);
       const result = await uploadBytes(storageRef,blob);
       blob.close();
       return await getDownloadURL(storageRef);
@@ -114,7 +116,7 @@ export default function TutorDetails5({ route,navigation }) {
     <View style={styles.container}>
       {loading ? ( 
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FFFFFF" />
+          <ActivityIndicator size="large" color="#00243a" />
           <Text style={styles.loadingText}>Processing documents...</Text> 
         </View>
       ) : (
@@ -174,7 +176,7 @@ export default function TutorDetails5({ route,navigation }) {
               disabled={loading} 
             >
               {loading ? ( 
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color="#00243a" />
               ) : (
                 <Text style={styles.applyButtonText}>Apply</Text>
               )}
@@ -261,7 +263,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#00243a',
     fontFamily: 'Ubuntu_400Regular',
   },
 

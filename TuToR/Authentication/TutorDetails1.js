@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  Platform, KeyboardAvoidingView, ScrollView
+} from 'react-native';
 import {isStrongPassword, isValidEmail} from "../ValidationUtils/ValidationUtils";
 
 export default function TutorDetails1({ route,navigation }) {
@@ -58,7 +68,11 @@ export default function TutorDetails1({ route,navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+      <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
       <ImageBackground 
         source={require('../assets/images/LoadingPage.png')} 
         style={styles.background}
@@ -103,7 +117,8 @@ export default function TutorDetails1({ route,navigation }) {
           </TouchableOpacity>
         </View>
       </ImageBackground>
-    </View>
+          </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 
