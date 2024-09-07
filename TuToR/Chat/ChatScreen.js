@@ -30,25 +30,25 @@ const ChatScreen = ({ route, navigation }) => {
         const setupChatRoom = async () => {
             const roomId = await createOrGetChatRoom(currentUser._id, user._id);
             setChatRoomId(roomId);
-            fetchMessages(roomId);
         };
         setupChatRoom();
 
         const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', scrollToBottom);
-        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', scrollToBottom); // Optional, if you want to adjust when the keyboard hides too
-
-        // Call markMessagesAsRead when chat room is entered
-        if (chatRoomId) {
-            markMessagesAsRead(chatRoomId, currentUser._id);
-        }
+        const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', scrollToBottom);
 
         return () => {
             keyboardDidShowListener.remove();
             keyboardDidHideListener.remove();
         };
+    }, []);  // Run once when component mounts
 
-
-    }, [chatRoomId]);
+    useEffect(() => {
+        if (chatRoomId) {
+            // Only fetch messages when chatRoomId is set
+            fetchMessages(chatRoomId);
+            markMessagesAsRead(chatRoomId, currentUser._id);  // Call once when chatRoomId changes
+        }
+    }, [chatRoomId]); // This will only run when chatRoomId changes
 
     const createOrGetChatRoom = async (user1Id, user2Id) => {
         const chatRoomId = user1Id < user2Id ? `${user1Id}_${user2Id}` : `${user2Id}_${user1Id}`;
