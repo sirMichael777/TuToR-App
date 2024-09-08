@@ -20,6 +20,13 @@ import StudentDetails2 from "./Authentication/StudentDetails2";
 import TermsAndConditions from "./Authentication/TermsAndConditions";
 import NotificationScreen from "./Screens/Notifications";
 import ProfileScreen from "./Screens/Profile";
+import PersonalInfo from './Screens/PersonalInfo';
+import Payment from "./Screens/Payment";
+import Settings from './Screens/Settings';
+import About from './Screens/About';
+import ChangePassword from './Screens/ChangePassword';
+import NotificationsPreferences from './Screens/NotificationsPreferences';
+import PrivacySettings from './Screens/PrivacySettings';
 import MainApp from './MainComponents/MainApp'
 import TutorMainApp from './MainComponents/TutorMain'
 import React from "react";
@@ -54,6 +61,13 @@ export default () => {
             <Stack.Screen name="TermsAndConditions" component={TermsAndConditions} />
             <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
             <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+            <Stack.Screen name="PersonalInfo" component={PersonalInfo} /> 
+            <Stack.Screen name="Payment" component={Payment} />
+            <Stack.Screen name="Settings" component={Settings} />
+            <Stack.Screen name="About" component={About} />
+            <Stack.Screen name="ChangePassword" component={ChangePassword} />
+            <Stack.Screen name="NotificationsPreferences" component={NotificationsPreferences} />
+            <Stack.Screen name="PrivacySettings" component={PrivacySettings} />
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="TutorMainApp" component={TutorMainApp} />
           </Stack.Navigator>

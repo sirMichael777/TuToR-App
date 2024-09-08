@@ -1,18 +1,69 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { firebaseAuth, firestoreDB } from '../Config/firebaseConfig'; // Import your firebase config
+import { doc, getDoc } from 'firebase/firestore';
 
 const { width, height } = Dimensions.get('window');
 
 const ProfileScreen = ({ navigation }) => {
+    const [profileData, setProfileData] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch user data from Firebase
+    const fetchUserProfile = async () => {
+        try {
+            const user = firebaseAuth.currentUser;
+
+            if (user) {
+                // Get user profile data from Firestore
+                const userDocRef = doc(firestoreDB, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+
+                if (userDoc.exists()) {
+                    setProfileData(userDoc.data());
+                } else {
+                    console.error('No user data found!');
+                    Alert.alert('Error', 'No user data found in Firestore.');
+                }
+            } else {
+                console.error('No user is logged in!');
+                Alert.alert('Error', 'No user is currently logged in.');
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            Alert.alert('Error', 'Failed to fetch user data.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Use useEffect to fetch data when the component mounts
+    useEffect(() => {
+        fetchUserProfile();
+    }, []);
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#23cbfb" />
+                <Text>Loading Profile...</Text>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <Text style={styles.headerText}>Profile</Text>
 
             <View style={styles.profileInfoContainer}>
                 <View style={styles.profileDetails}>
-                    <Text style={styles.profileName}>Thabang Mokoena</Text>
-                    <Text style={styles.profileEmail}>shaunthabang835@gmail.com</Text>
+                <Text style={styles.profileName}>
+                    {profileData?.name? `${profileData.name} ${profileData.lastName || ''}`: 'User Name'}
+                </Text>
+                    <Text style={styles.profileEmail}>
+                        {firebaseAuth.currentUser?.email || 'user@example.com'}
+                    </Text>
                 </View>
                 <TouchableOpacity onPress={() => { }}>
                     <View style={styles.profileImagePlaceholder}>
@@ -22,19 +73,19 @@ const ProfileScreen = ({ navigation }) => {
             </View>
 
             <View style={styles.optionsContainer}>
-                <TouchableOpacity style={styles.optionButton}>
+                <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('PersonalInfo')}>
                     <Ionicons name="pencil-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Personal Information</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.optionButton}>
+                <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Payment')}>
                     <Ionicons name="card-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Payment</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.optionButton}>
+                <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Settings')}>
                     <Ionicons name="settings-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Settings</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.optionButton}  onPress={() => navigation.navigate('WelcomeScreen')}>
+                <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('WelcomeScreen')}>
                     <Ionicons name="log-out-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Log out</Text>
                 </TouchableOpacity>
@@ -46,12 +97,16 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        top:height*0.03,
+        top: height * 0.03,
         backgroundColor: '#ffffff',
         padding: width * 0.05, // 5% padding
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     headerText: {
-
         fontSize: width * 0.06, // 6% of screen width
         fontWeight: 'bold',
         textAlign: 'center',
@@ -104,7 +159,6 @@ const styles = StyleSheet.create({
         fontSize: width * 0.045, // 4.5% of screen width
         fontWeight: 'bold',
     },
-
 });
 
 export default ProfileScreen;
