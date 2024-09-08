@@ -1,7 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Dimensions,Image } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ActivityIndicator, TextInput, Image } from 'react-native';
+import RNPickerSelect from 'react-native-picker-select';
+import { firestoreDB } from '../Config/firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import defaultPic from '../assets/images/defaultImage.jpeg'; // Adjust the path based on your project structure
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -16,27 +21,14 @@ const FindTutorScreen = ({ navigation }) => {
   const [sessionDuration, setSessionDuration] = useState('');
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
-
+  const [tutors, setTutors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const [noTutorsFound, setNoTutorsFound] = useState(false);
   const [selectedMode, setSelectedMode] = useState('In Person');
 
-  const tutors = [
-    {
-      id: 1,
-      name: 'Michael Maseko',
-      rating: 4.7,
-      ratingsCount: 17,
-      price: 'R250/hr',
-      image: require('../assets/Profile.png'), // Replace with actual image path
-    },
-    {
-      id: 2,
-      name: 'Thabang Mokoena',
-      rating: 4.4,
-      ratingsCount: 31,
-      price: 'R230/hr',
-      image: require('../assets/Profile.png'), // Replace with actual image path
-    },
-  ];
+  const scrollViewRef = useRef();
 
   const options = [
     'Exam Preparation',
@@ -47,155 +39,245 @@ const FindTutorScreen = ({ navigation }) => {
     'Other/Custom Request',
   ];
 
+  useEffect(() => {
+    if (selectedCourse) {
+      fetchTutorsForCourse(selectedCourse).catch(error => {
+        console.error("Error fetching tutors:", error);
+        setError('Unable to fetch tutors, please try again later.');
+      });
+    }
+  }, [selectedCourse]);
+
+  const fetchTutorsForCourse = async (course) => {
+    try {
+      setLoading(true);
+      console.log("Fetching tutors for course:", course);
+      const tutorsRef = collection(firestoreDB, 'Tutors');
+      const q = query(tutorsRef, where('courses', 'array-contains', course));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const fetchedTutors = querySnapshot.docs.map((doc) => doc.data());
+        setTutors(fetchedTutors);
+        setNoTutorsFound(false);
+      } else {
+        console.log("No tutors found for course:", course);
+        setTutors([]);
+        setNoTutorsFound(true);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching tutors:', error);
+      setError('Error fetching tutors, please try again later.');
+      setLoading(false);
+    }
+  };
+
+  const handleOptionPress = (option) => {
+    setSelectedOption(option);
+    if (option === 'Other/Custom Request') {
+      setTimeout(() => {
+        scrollViewRef.current.scrollToEnd({ animated: true }); // Automatically scroll to the bottom when 'Other/Custom Request' is selected
+      }, 300);
+    }
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
         return (
-            <View style={styles.stepContainer}>
-              <Text style={styles.questionText}>Which course do you need assistance with?</Text>
-              <TouchableOpacity style={styles.searchButton}>
-                <Text style={styles.searchButtonText}>Search for course</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.stepContainer}>
+            <Text style={styles.questionText}>Which course do you need assistance with?</Text>
+            <RNPickerSelect
+              onValueChange={(course) => setSelectedCourse(course)}
+              placeholder={{ label: "Select a course", value: null }}
+              items={[
+                { label: 'ACC1006F/S', value: 'ACC1006F/S' },
+                { label: 'AGE1002S', value: 'AGE1002S' },
+                { label: 'AST1000S', value: 'AST1000S' },
+                { label: 'BIO1000F', value: 'BIO1000F' },
+                { label: 'BIO1004S', value: 'BIO1004S' },
+                { label: 'CEM1000W', value: 'CEM1000W' },
+                { label: 'CSC1015F/S', value: 'CSC1015F/S' },
+                { label: 'CSC1016S', value: 'CSC1016S' },
+                { label: 'EGS1003S', value: 'EGS1003S' },
+                { label: 'FTX1005F/S', value: 'FTX1005F/S' },
+                { label: 'GEO1009F', value: 'GEO1009F' },
+                { label: 'MAM1000W', value: 'MAM1000W' },
+                { label: 'MAM1019H', value: 'MAM1019H' },
+                { label: 'MAM1031F', value: 'MAM1031F' },
+                { label: 'MAM1032S', value: 'MAM1032S' },
+                { label: 'MAM1043H', value: 'MAM1043H' },
+                { label: 'MAM1044H', value: 'MAM1044H' },
+                { label: 'PHY1004W', value: 'PHY1004W' },
+                { label: 'PHY1031F', value: 'PHY1031F' },
+                { label: 'STA1000F/S', value: 'STA1000F/S' },
+                { label: 'STA1006S', value: 'STA1006S' },
+                { label: 'STA1007S', value: 'STA1007S' },
+              ]}
+              style={styles.pickerSelectStyles}
+            />
+          </View>
         );
       case 1:
         return (
-            <View style={styles.stepContainer}>
-              <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-                <Text style={styles.buttonText}>Select Date</Text>
-              </TouchableOpacity>
-              {showDatePicker && (
-                  <DateTimePicker
-                      value={date}
-                      mode="date"
-                      display="default"
-                      onChange={(event, selectedDate) => {
-                        setShowDatePicker(false);
-                        if (selectedDate) {
-                          setDate(selectedDate);
-                        }
-                      }}
-                  />
-              )}
-
-              <TouchableOpacity style={styles.timeButton} onPress={() => setShowStartTimePicker(true)}>
-                <Text style={styles.buttonText}>Select Start Time</Text>
-              </TouchableOpacity>
-              {showStartTimePicker && (
-                  <DateTimePicker
-                      value={startTime}
-                      mode="time"
-                      display="default"
-                      onChange={(event, selectedTime) => {
-                        setShowStartTimePicker(false);
-                        if (selectedTime) {
-                          setStartTime(selectedTime);
-                          if (endTime) {
-                            const duration = calculateDuration(selectedTime, endTime);
-                            setSessionDuration(duration);
-                          }
-                        }
-                      }}
-                  />
-              )}
-
-              <TouchableOpacity style={styles.timeButton} onPress={() => setShowEndTimePicker(true)}>
-                <Text style={styles.buttonText}>Select End Time</Text>
-              </TouchableOpacity>
-              {showEndTimePicker && (
-                  <DateTimePicker
-                      value={endTime}
-                      mode="time"
-                      display="default"
-                      onChange={(event, selectedTime) => {
-                        setShowEndTimePicker(false);
-                        if (selectedTime) {
-                          setEndTime(selectedTime);
-                          if (startTime) {
-                            const duration = calculateDuration(startTime, selectedTime);
-                            setSessionDuration(duration);
-                          }
-                        }
-                      }}
-                  />
-              )}
-
-              {sessionDuration !== '' && (
-                  <Text style={styles.durationText}>Session Duration: {sessionDuration}</Text>
-              )}
-            </View>
+          <View style={styles.stepContainer}>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+              <Text style={styles.buttonText}>Select Date</Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={date}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    setDate(selectedDate);
+                  }
+                }}
+              />
+            )}
+            <TouchableOpacity style={styles.timeButton} onPress={() => setShowStartTimePicker(true)}>
+              <Text style={styles.buttonText}>Select Start Time</Text>
+            </TouchableOpacity>
+            {showStartTimePicker && (
+              <DateTimePicker
+                value={startTime}
+                mode="time"
+                display="default"
+                onChange={(event, selectedTime) => {
+                  setShowStartTimePicker(false);
+                  if (selectedTime) {
+                    setStartTime(selectedTime);
+                    if (endTime) {
+                      const duration = calculateDuration(selectedTime, endTime);
+                      setSessionDuration(duration);
+                    }
+                  }
+                }}
+              />
+            )}
+            <TouchableOpacity style={styles.timeButton} onPress={() => setShowEndTimePicker(true)}>
+              <Text style={styles.buttonText}>Select End Time</Text>
+            </TouchableOpacity>
+            {showEndTimePicker && (
+              <DateTimePicker
+                value={endTime}
+                mode="time"
+                display="default"
+                onChange={(event, selectedTime) => {
+                  setShowEndTimePicker(false);
+                  if (selectedTime) {
+                    setEndTime(selectedTime);
+                    if (startTime) {
+                      const duration = calculateDuration(startTime, selectedTime);
+                      setSessionDuration(duration);
+                    }
+                  }
+                }}
+              />
+            )}
+            {sessionDuration !== '' && (
+              <Text style={styles.durationText}>Session Duration: {sessionDuration}</Text>
+            )}
+          </View>
         );
-
       case 2:
         return (
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-              <Text style={styles.instructionText}>
-                Tell us what you need help with so we can match you with the right tutor.
-              </Text>
-              <View style={styles.optionsContainer}>
-                {options.map((option, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={styles.optionButton}
-                        onPress={() => setSelectedOption(option)}
-                    >
-                      <Text style={[
-                        styles.optionText,
-                        selectedOption === option && styles.selectedOptionText
-                      ]}>
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                ))}
-                {selectedOption === 'Other/Custom Request' && (
-                    <TextInput
-                        style={styles.customRequestInput}
-                        placeholder="Please specify any specific topics, chapters, or questions you'd like to focus on."
-                        placeholderTextColor="#ccc"
-                        multiline={true}
-                        value={customRequest}
-                        onChangeText={setCustomRequest}
-                    />
-                )}
-              </View>
-            </ScrollView>
+          <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContainer}>
+            <Text style={styles.instructionText}>
+              Tell us what you need help with so we can match you with the right tutor.
+            </Text>
+            <View style={styles.optionsContainer}>
+              {options.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.optionButton}
+                  onPress={() => handleOptionPress(option)}
+                >
+                  <Text style={[
+                    styles.optionText,
+                    selectedOption === option && styles.selectedOptionText,
+                  ]}>
+                    {option}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              {selectedOption === 'Other/Custom Request' && (
+                <TextInput
+                  style={styles.customRequestInput}
+                  placeholder="Please specify any specific topics, chapters, or questions you'd like to focus on."
+                  placeholderTextColor="#ccc"
+                  multiline={true}
+                  value={customRequest}
+                  onChangeText={setCustomRequest}
+                />
+              )}
+            </View>
+          </ScrollView>
         );
       case 3:
         return (
-            <View style={styles.stepContainer}>
-              <View style={styles.modeContainer}>
-                <TouchableOpacity onPress={() => setSelectedMode('Online')}>
-                  <Text style={[
-                    styles.modeText,
-                    selectedMode === 'Online' && styles.activeModeText
-                  ]}>Online</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setSelectedMode('In Person')}>
-                  <Text style={[
-                    styles.modeText,
-                    selectedMode === 'In Person' && styles.activeModeText
-                  ]}>In Person</Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.availableText}>2 available</Text>
-              <ScrollView style={styles.tutorList}>
-                {tutors.map(tutor => (
-                    <View key={tutor.id} style={styles.tutorCard}>
-                      <Image source={tutor.image} style={styles.tutorImage} />
-                      <View style={styles.tutorInfo}>
-                        <Text style={styles.tutorName}>{tutor.name}</Text>
-                        <Text style={styles.tutorRating}>
-                          ⭐ {tutor.rating} ({tutor.ratingsCount} ratings)
-                        </Text>
-                        <Text style={styles.tutorPrice}>{tutor.price}</Text>
-                        <TouchableOpacity style={styles.selectButton}>
-                          <Text style={styles.selectButtonText}>Select</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                ))}
-              </ScrollView>
+          <View style={styles.stepContainer}>
+            <View style={styles.modeContainer}>
+              <TouchableOpacity onPress={() => setSelectedMode('Online')}>
+                <Text style={[
+                  styles.modeText,
+                  selectedMode === 'Online' && styles.activeModeText,
+                ]}>
+                  Online
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setSelectedMode('In Person')}>
+                <Text style={[
+                  styles.modeText,
+                  selectedMode === 'In Person' && styles.activeModeText,
+                ]}>
+                  In Person
+                </Text>
+              </TouchableOpacity>
             </View>
+            {loading ? (
+              <ActivityIndicator size="large" color="#0000ff" />
+            ) : (
+              <ScrollView contentContainerStyle={{ paddingBottom: height * 0.08 }} style={styles.tutorList}>
+                {tutors.length > 0 ? (
+                  tutors.map((tutor) => (
+                    <View key={tutor._id} style={styles.tutorCard}>
+                      <Image
+                        source={
+                          tutor.imageUrl
+                            ? { uri: tutor.imageUrl }
+                            : defaultPic
+                        }
+                        style={styles.tutorImage}
+                      />
+                      <View style={styles.tutorInfo}>
+                        <Text style={styles.tutorName}>
+                          {tutor.firstName} {tutor.lastName}
+                        </Text>
+                        <Text style={styles.tutorRating}>
+                          ⭐ {tutor.rating || 'No rating yet'}
+                        </Text>
+                        <Text style={styles.tutorPrice}>
+                          R{tutor.rate || 'N/A'}/hr
+                        </Text>
+                      </View>
+                      <TouchableOpacity style={styles.selectButton}>
+                        <Text style={styles.selectButtonText}>Select</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))
+                ) : (
+                  <View style={styles.noTutorsContainer}>
+                    <Text style={styles.noTutorsText}>
+                      Sorry, no tutors are available for the selected course right now.
+                    </Text>
+                  </View>
+                )}
+              </ScrollView>
+            )}
+          </View>
         );
       default:
         return null;
@@ -211,38 +293,45 @@ const FindTutorScreen = ({ navigation }) => {
   };
 
   return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleBackPress} disabled={currentStep === 0}>
-            <Ionicons name="arrow-back-outline" size={width * 0.07} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Find Tutor</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-            <Ionicons name="notifications-outline" size={width * 0.07} color="black" style={styles.notificationIcon} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-            <Ionicons name="person-outline" size={24} color="black" style={styles.profileIcon} />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.progressContainer}>
-          <View style={[styles.progressStep, currentStep >= 0 && styles.progressStepActive]} />
-          <View style={[styles.progressStep, currentStep >= 1 && styles.progressStepActive]} />
-          <View style={[styles.progressStep, currentStep >= 2 && styles.progressStepActive]} />
-          <View style={[styles.progressStep, currentStep >= 3 && styles.progressStepActive]} />
-        </View>
-
-        {renderStepContent()}
-
-        <TouchableOpacity
-            style={styles.nextButton}
-            onPress={() => setCurrentStep(currentStep + 1)}
-            disabled={currentStep === 3}
-        >
-          {currentStep < 3 && <Text style={styles.nextButtonText}>Next</Text>}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBackPress} disabled={currentStep === 0}>
+          <Ionicons name="arrow-back-outline" size={width * 0.07} color="black" />
         </TouchableOpacity>
-
+        <Text style={styles.headerText}>Find Tutor</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
+          <Ionicons name="notifications-outline" size={width * 0.07} color="black" style={styles.notificationIcon} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+          <Ionicons name="person-outline" size={24} color="black" style={styles.profileIcon} />
+        </TouchableOpacity>
       </View>
+      <View style={styles.progressContainer}>
+        <View style={[styles.progressStep, currentStep >= 0 && styles.progressStepActive]} />
+        <View style={[styles.progressStep, currentStep >= 1 && styles.progressStepActive]} />
+        <View style={[styles.progressStep, currentStep >= 2 && styles.progressStepActive]} />
+        <View style={[styles.progressStep, currentStep >= 3 && styles.progressStepActive]} />
+      </View>
+      {renderStepContent()}
+      {currentStep < 3 && (
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => {
+            if (currentStep === 2) {
+              if (!selectedOption || (selectedOption === 'Other/Custom Request' && !customRequest)) {
+                alert('Please select an option or enter a custom request.');
+              } else {
+                setCurrentStep(currentStep + 1);
+              }
+            } else {
+              setCurrentStep(currentStep + 1);
+            }
+          }}
+        >
+          <Text style={styles.nextButtonText}>Next</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 };
 
@@ -251,10 +340,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     padding: width * 0.05,
-    paddingBottom: height * 0.08, // Added padding to account for the bottom navigation
+    paddingBottom: height * 0.08,
   },
   header: {
-    top: height*0.03,
+    top: height * 0.03,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -262,7 +351,7 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 24,
-    left: width*0.09,
+    left: width * 0.09,
     fontWeight: 'bold',
   },
   iconContainer: {
@@ -355,25 +444,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
   },
-  customRequestInput: {
-    marginTop: height * 0.02,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    padding: width * 0.03,
-    fontSize: width * 0.04,
-    color: '#000',
-    height: height * 0.1,
-  },
-  nextButton: {
-    backgroundColor: '#007BFF',
-    borderRadius: width * 0.05,
-    paddingVertical: height * 0.02,
-    paddingHorizontal: width * 0.2,
-    bottom: height * 0.03, // Adjusted to account for navigation bar
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginTop: height * 0.02,
-  },
+ customRequestInput: {
+     marginTop: height * 0.03, // Add margin to the text input
+     backgroundColor: '#ffffff',
+     borderRadius: 10,
+     padding: width * 0.03,
+     fontSize: width * 0.04,
+     color: '#000',
+     height: height * 0.1,
+   },
+
+   nextButton: {
+     backgroundColor: '#007BFF',
+     borderRadius: width * 0.05,
+     paddingVertical: height * 0.02,
+     paddingHorizontal: width * 0.2,
+     marginTop: height * 0.03,  // Create space between the options and the button
+     alignItems: 'center',
+     alignSelf: 'center',
+     marginBottom: height * 0.05,  // Add margin at the bottom for spacing
+   },
   nextButtonText: {
     color: '#fff',
     fontSize: width * 0.05,
@@ -383,48 +473,48 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tutorCard: {
-    flexDirection: 'row',
+    flexDirection: 'row', // Align the image and text horizontally
     backgroundColor: '#23cbfb',
     borderRadius: width * 0.05,
     padding: width * 0.05,
     marginBottom: height * 0.02,
-    alignItems: 'center',
+    alignItems: 'center', // Align tutor info and image in the center
   },
   tutorImage: {
-    width: width * 0.2,
+    width: width * 0.2, // Size of the tutor image
     height: width * 0.2,
-    borderRadius: (width * 0.2) / 2,
-    marginRight: width * 0.05,
+    borderRadius: (width * 0.2) / 2, // Make the image circular
+    marginRight: width * 0.05, // Space between image and text
   },
   tutorInfo: {
     flex: 1,
+    justifyContent: 'center', // Ensure that text is vertically centered
   },
   tutorName: {
     fontSize: width * 0.045,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: height * 0.01,
   },
   tutorRating: {
     fontSize: width * 0.04,
     color: '#fff',
-    marginBottom: height * 0.005,
   },
   tutorPrice: {
     fontSize: width * 0.045,
     color: '#fff',
-    marginBottom: height * 0.01,
+    marginTop: height * 0.01,
   },
   selectButton: {
     backgroundColor: '#000',
-    borderRadius: width * 0.03,
+    borderRadius: width * 0.05,
     paddingVertical: height * 0.01,
-    paddingHorizontal: width * 0.1,
+    paddingHorizontal: width * 0.05,
     alignItems: 'center',
   },
   selectButtonText: {
     color: '#fff',
     fontSize: width * 0.04,
+    fontWeight: 'bold',
   },
   modeContainer: {
     flexDirection: 'row',
@@ -441,24 +531,35 @@ const styles = StyleSheet.create({
     color: '#000',
     textDecorationLine: 'underline',
   },
-  availableText: {
-    fontSize: width * 0.045,
-    color: '#777',
-    marginVertical: height * 0.01,
+  noTutorsContainer: {
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  scrollContainer: undefined,
-  bottomNavigation: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  noTutorsText: {
+    fontSize: 16,
+    color: 'red',
+    textAlign: 'center',
   },
-  notificationIcon: {
-    left: width * 0.13,
-  }
-
+  pickerSelectStyles: {
+    inputIOS: {
+      backgroundColor: '#f0f0f0',
+      borderRadius: 25,
+      paddingHorizontal: 20,
+      marginVertical: 10,
+      height: 50,
+      fontSize: 16,
+      color: '#000',
+    },
+    inputAndroid: {
+      backgroundColor: '#f0f0f0',
+      borderRadius: 25,
+      paddingHorizontal: 20,
+      marginVertical: 10,
+      height: 50,
+      fontSize: 16,
+      color: '#000',
+    },
+  },
 });
-
-
-
 export default FindTutorScreen;
