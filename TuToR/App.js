@@ -5,7 +5,6 @@ import {NavigationContainer} from "@react-navigation/native";
 import LoadingScreen from "./Authentication/LoadingScreen";
 import WelcomeScreen from "./Authentication/WelcomeScreen";
 import AuthTypeScreen from "./Authentication/AuthTypeScreen";
-import SignUpScreen from "./Authentication/SignUpScreen";
 import SignInScreen from "./Authentication/SignInScreen";
 import ResetPasswordScreen from "./Authentication/ResetPasswordScreen";
 import EnterResetCodeScreen from "./Authentication/EnterResetCodeScreen";
@@ -33,6 +32,8 @@ import React from "react";
 import {createStackNavigator} from "@react-navigation/stack";
 import {StatusBar} from "react-native";
 import TutorSearchScreen from "./Chat/TutorSearchScreen";
+import ChatScreen from "./Chat/ChatScreen";
+
 
 const Stack = createStackNavigator();
 
@@ -45,7 +46,6 @@ export default () => {
             <Stack.Screen name="LoadingScreen" component={LoadingScreen} />
             <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
             <Stack.Screen name="AuthTypeScreen" component={AuthTypeScreen} />
-            <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
             <Stack.Screen name="SignInScreen" component={SignInScreen} />
             <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />
             <Stack.Screen name="EnterResetCodeScreen" component={EnterResetCodeScreen} />
@@ -68,6 +68,7 @@ export default () => {
             <Stack.Screen name="ChangePassword" component={ChangePassword} />
             <Stack.Screen name="NotificationsPreferences" component={NotificationsPreferences} />
             <Stack.Screen name="PrivacySettings" component={PrivacySettings} />
+              <Stack.Screen name="ChatScreen" component={ChatScreen} />
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="TutorMainApp" component={TutorMainApp} />
           </Stack.Navigator>

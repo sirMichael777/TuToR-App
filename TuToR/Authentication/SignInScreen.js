@@ -1,19 +1,31 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, ActivityIndicator } from 'react-native';
-import {signInWithEmailAndPassword} from "firebase/auth";
-import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
-import {doc, getDoc} from "firebase/firestore";
-import {isValidEmail} from "../ValidationUtils/ValidationUtils";
-import {useDispatch} from "react-redux";
-import {setUser} from "../context/actions/userActions";
-import {CommonActions} from "@react-navigation/native";
+import {
+  Platform,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView, ScrollView
+} from 'react-native';
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { firebaseAuth, firestoreDB } from "../Config/firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
+import { isValidEmail } from "../ValidationUtils/ValidationUtils";
+import { useDispatch } from "react-redux";
+import { setUser } from "../context/actions/userActions";
+import { CommonActions } from "@react-navigation/native";
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for password visibility
 
-export default function SignInScreen({navigation}) {
+export default function SignInScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Manage password visibility
   const dispatch = useDispatch();
 
   const handleSignIn = async () => {
@@ -22,113 +34,110 @@ export default function SignInScreen({navigation}) {
       await signInWithEmailAndPassword(firebaseAuth, email, password)
           .then((userCredential) => {
             if (userCredential?.user) {
-              console.log("User Id:", userCredential?.user.uid);
-              getDoc(doc(firestoreDB, 'users', userCredential?.user.uid)).then(
-                  (docSnap) => {
-                    if (docSnap.exists()) {
-                      const userData = docSnap.data();
-                      console.log("Is signed in");
-                      dispatch(setUser(userData));
+              getDoc(doc(firestoreDB, 'users', userCredential?.user.uid)).then((docSnap) => {
+                if (docSnap.exists()) {
+                  const userData = docSnap.data();
+                  dispatch(setUser(userData));
 
-                      if (userData.role === 'Student') {
-
-                        navigation.dispatch(
-                            CommonActions.reset({
-                              index: 0,
-                              routes: [{ name: 'MainApp' }],
-                            })
-                        );
-
-                      } else if (userData.role === 'Tutor') {
-
-                        navigation.dispatch(
-                            CommonActions.reset({
-                              index: 0,
-                              routes: [{ name: 'TutorMainApp' }],
-                            })
-                        );
-
-                      }
-                    }
-                    setLoading(false);
-                  });
+                  if (userData.role === 'Student') {
+                    navigation.dispatch(
+                        CommonActions.reset({
+                          index: 0,
+                          routes: [{ name: 'MainApp' }],
+                        })
+                    );
+                  } else if (userData.role === 'Tutor') {
+                    navigation.dispatch(
+                        CommonActions.reset({
+                          index: 0,
+                          routes: [{ name: 'TutorMainApp' }],
+                        })
+                    );
+                  }
+                }
+                setLoading(false);
+              });
             }
           }).catch((error) => {
             setLoading(false);
-            if (error.message.includes('invalid-credential')) {
-              setShowError(true);
-              setError("Incorrect password or email");
-            } else {
-              setShowError(true);
-              setError('User does not exist');
-              console.log(error.message);
-            }
-            setInterval(() => {
+            setError(error.message.includes('invalid-credential') ? "Incorrect password or email" : 'User does not exist');
+            setShowError(true);
+            setTimeout(() => {
               setShowError(false);
             }, 5000);
-          })
+          });
     } else {
       setError('Invalid email format.');
       setShowError(true);
     }
   };
 
-
   return (
-    <View style={styles.container}>
-      <ImageBackground
-        source={require('../assets/images/LoadingPage.png')}
-        style={styles.background}
-        imageStyle={styles.imageStyle}
+      <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.container}
       >
-        <View style={styles.fixedContainer}>
-          <Text style={styles.title}>Sign in</Text>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ImageBackground
+            source={require('../assets/images/LoadingPage.png')}
+            style={styles.background}
+            imageStyle={styles.imageStyle}
+        >
+          <View style={styles.fixedContainer}>
+            <Text style={styles.title}>Sign in</Text>
 
-          {showError && (<Text style={styles.error}>{error}</Text>)}
+            {showError && (<Text style={styles.error}>{error}</Text>)}
 
-          <TextInput 
-            placeholder="Email" 
-            style={styles.input} 
-            placeholderTextColor="#a9a9a9" 
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+            <TextInput
+                placeholder="Email"
+                style={styles.input}
+                placeholderTextColor="#a9a9a9"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+            />
 
-          <TextInput 
-            placeholder="Password" 
-            secureTextEntry 
-            style={styles.input} 
-            placeholderTextColor="#a9a9a9" 
-            value={password}
-            onChangeText={setPassword}
-          />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                  placeholder="Password"
+                  secureTextEntry={!showPassword}
+                  style={styles.passwordInput}
+                  placeholderTextColor="#a9a9a9"
+                  value={password}
+                  onChangeText={setPassword}
+              />
+              <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#a9a9a9" />
+              </TouchableOpacity>
+            </View>
 
-          <TouchableOpacity 
-            style={styles.button}
-            onPress={handleSignIn}
-            disabled={loading} //// Disable button when loading
-          >
-            {loading ? ( //// Show loading spinner when loading
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={styles.buttonText}>Sign in</Text>
-            )}
-          </TouchableOpacity>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={handleSignIn}
+                disabled={loading}
+            >
+              {loading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                  <Text style={styles.buttonText}>Sign in</Text>
+              )}
+            </TouchableOpacity>
 
-          <TouchableOpacity
-              onPress={() => navigation.navigate('ResetPasswordScreen')}>
-            <Text style={styles.linkText}>Forgot password?</Text>
-          </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('ResetPasswordScreen')}>
+              <Text style={styles.linkText}>Forgot password?</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={() =>
-              navigation.navigate('AuthTypeScreen', { action: 'SignUp' })}>
-            <Text style={styles.linkText}>Don’t have an account? Sign up</Text>
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
-    </View>
+            <TouchableOpacity onPress={() => navigation.navigate('AuthTypeScreen', { action: 'SignUp' })}>
+              <Text style={styles.linkText}>Don’t have an account? Sign up</Text>
+            </TouchableOpacity>
+          </View>
+        </ImageBackground>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 
@@ -166,7 +175,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
-
   input: {
     backgroundColor: '#F0F0F0',
     borderRadius: 25,
@@ -174,6 +182,23 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingHorizontal: 15,
     height: 50,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 25,
+    marginVertical: 10,
+    width: '100%',
+    paddingHorizontal: 15,
+    height: 50,
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
+    height: '100%',
+  },
+  eyeIcon: {
+    marginLeft: 10,
   },
   button: {
     backgroundColor: '#00243a',

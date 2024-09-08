@@ -1,14 +1,18 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import {useSelector} from "react-redux";
+import MessageListener from "../Chat/MessageListener";
 
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
 
-    return (
+    const currentUser = useSelector((state) => state.user.user);
 
+    return (
         <View style={styles.container}>
+            <MessageListener navigation={navigation}/>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Home</Text>
                 <View style={styles.iconContainer}>

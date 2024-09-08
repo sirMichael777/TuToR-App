@@ -1,5 +1,7 @@
 import React, {useEffect} from 'react';
 import {View, Text, ImageBackground, StyleSheet, Dimensions, TouchableOpacity, BackHandler} from 'react-native';
+import {signOut} from "firebase/auth";
+import {firebaseAuth} from "../Config/firebaseConfig";
 
 export default function ApplicationStatus({ navigation }) {
   const windowDimensions = Dimensions.get('window');
@@ -20,6 +22,15 @@ export default function ApplicationStatus({ navigation }) {
     return () => backHandler.remove();
   }, []);
 
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(firebaseAuth); // Sign out from Firebase authentication
+    } catch (error) {
+      console.error('Error signing out:', error.message); // Handle any error during sign out
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -35,8 +46,7 @@ export default function ApplicationStatus({ navigation }) {
 
           <TouchableOpacity 
             style={[styles.button, { marginTop: 30 }]} 
-            onPress={() => navigation.replace('SignInScreen')
-          }
+            onPress={handleSignOut}
           >
             <Text style={styles.buttonText}>OK</Text>
           </TouchableOpacity>

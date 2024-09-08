@@ -5,6 +5,7 @@ import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {doc, getDoc} from "firebase/firestore";
 import {setUser} from "../context/actions/userActions";
 import {useDispatch} from "react-redux";
+import {CommonActions} from "@react-navigation/native";
 
 const LoadingScreen = ({navigation}) => {
     const dispatch = useDispatch();
@@ -23,13 +24,19 @@ const LoadingScreen = ({navigation}) => {
 
                     if(userData.acceptedTerms){
                         if (userData.role === 'Student') {
-                            setTimeout(() => {
-                                navigation.replace("MainApp"); // Replace with the student home screen
-                            }, 6000);// Replace with the student home screen
+                            navigation.dispatch(
+                                CommonActions.reset({
+                                    index: 0,
+                                    routes: [{ name: 'MainApp' }],
+                                })
+                            );
                         } else if (userData.role === 'Tutor') {
-                            setTimeout(() => {
-                                navigation.replace("TutorMainApp"); // Replace with the tutor home screen
-                            }, 6000);  // Replace with the tutor home screen
+                            navigation.dispatch(
+                                CommonActions.reset({
+                                    index: 0,
+                                    routes: [{ name: 'TutorMainApp' }],
+                                })
+                            );
                         }
                     }else{
                         navigation.navigate('TermsAndConditions', { userId: user.uid });
@@ -37,15 +44,15 @@ const LoadingScreen = ({navigation}) => {
                 }
             } else {
                 setTimeout(() => {
-                    navigation.replace("WelcomeScreen"); // Replace with the tutor home screen
-                }, 6000);
+                    navigation.replace("SignInScreen"); // Replace with the tutor home screen
+                }, 2000);
             }
         });
     };
 
     return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Image source={Logo} style={{ width: 150, height: 150, marginBottom:20 }} resizeMode="contain" />
+            <Image source={Logo} style={{ width: 150, height: 150, marginBottom:20 , borderRadius:100 }} resizeMode="contain" />
             <ActivityIndicator size={"large"} color="#00243a" />
         </View>
     );

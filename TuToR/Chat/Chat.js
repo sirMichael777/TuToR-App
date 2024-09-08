@@ -1,17 +1,98 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ScrollView, ActivityIndicator} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useSelector} from "react-redux";
+import {collection, getDoc, onSnapshot, orderBy, query, where, limit, doc} from "firebase/firestore";
+import {firestoreDB} from "../Config/firebaseConfig";
+import MessageCard from "./MessageCard";
+import MessageListener from "./MessageListener";
 
 const { width, height } = Dimensions.get('window');
 
 const ChatScreen = ({ navigation }) => {
 
-    const user = useSelector((state) => state.user);
+    const currentUser = useSelector((state) => state.user.user);
     const [loading, setLoading] = useState(false);
+    const [chatRooms, setChatRooms] = useState([]);
+    const [lastMessages, setLastMessages] = useState({});
+
+    // useEffect to fetch chat rooms when the user is available
+    const fetchChatRoomIDs = async () => {
+        setLoading(true);
+        const q = query(collection(firestoreDB, 'chats'), where('users', 'array-contains', currentUser._id));
+
+        const unsubscribe = onSnapshot(q, async (snapshot) => {
+            const chatRoomPromises = snapshot.docs.map(async (document) => {
+                const chatData = document.data();
+                const otherUserId = chatData.users.find(userId => userId !== currentUser._id);
+
+                if (!otherUserId) return null;
+
+                const otherUserDoc = await getDoc(doc(firestoreDB, 'users', otherUserId));
+
+                return {
+                    id: document.id,
+                    otherUser: otherUserDoc.data(),
+                };
+            });
+
+            const chatRoomsData = await Promise.all(chatRoomPromises);
+            setChatRooms(chatRoomsData);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+    };
+
+    // Fetch last message for each chat room
+    const fetchLastMessage = (roomId) => {
+        setLoading(true);
+        const messagesRef = collection(firestoreDB, 'chats', roomId, 'messages');
+        const q = query(messagesRef, orderBy('timestamp', 'desc'));
+
+        return onSnapshot(q, (snapshot) => {
+            const fetchedMessages = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            const lastMessage = fetchedMessages[0];
+
+            if (lastMessage) {
+                setLastMessages((prevState) => ({
+                    ...prevState,
+                    [roomId]: {
+                        text: lastMessage.text || 'Say Hi',
+                        senderId: lastMessage.senderId,
+                        isRead: lastMessage.readBy.includes(currentUser._id),
+                        timestamp: lastMessage.timestamp || null,
+                    }
+                }));
+            }
+
+            setLoading(false);
+        });
+    };
+
+    // useEffect to fetch chat rooms when the user is available
+    useEffect(() => {
+        if (currentUser) {
+            fetchChatRoomIDs();
+        }
+    }, [currentUser]);
+
+    // useEffect to fetch last messages whenever chatRooms is updated
+    useEffect(() => {
+        chatRooms.forEach(room => {
+            if (room?.id) {
+                fetchLastMessage(room.id);
+            }
+        });
+    }, [chatRooms]);
+
 
     return (
         <View style={styles.container}>
+            <MessageListener navigation={navigation}/>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Chat</Text>
                 <View style={styles.iconContainer}>
@@ -30,49 +111,32 @@ const ChatScreen = ({ navigation }) => {
                     <Ionicons name="add-circle-outline" size={30} color="#00243a" />
                 </TouchableOpacity>
             </View>
+
             <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-            {loading? (
-                <>
-                    <View className="w-full flex items-center justify-center">
-                        <ActivityIndicator size={"large"} color="#00243a" />
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#00243a" />
                     </View>
-            </>) : (<>
-                <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-                    <MessageCard/>
-            </>
-            )}
+                ) : (
+                    chatRooms.map((chatRoom) => (
+                        <MessageCard
+                            key={chatRoom.id}
+                            user={chatRoom.otherUser}
+                            lastMessage={lastMessages[chatRoom.id]?.text || 'Say Hi'}
+                            lastMessageSenderId={lastMessages[chatRoom.id]?.senderId}
+                            lastMessageTime={lastMessages[chatRoom.id]?.timestamp}
+                            isRead={lastMessages[chatRoom.id]?.isRead}
+                            currentUserId={currentUser._id}
+                            navigation={navigation}
+                        />
+                    ))
+                )}
             </ScrollView>
         </View>
     );
 };
 
-const MessageCard = () => (
-    <TouchableOpacity style={styles.messageCard}>
-        {/*{tutor.imageUrl && tutor.imageUrl !== '' (*/}
-        {/*    <Image source={{ uri: imageUrl }} style={styles.messageImage} />*/}
-        {/*) : (*/}
-            <View style={styles.placeholderIcon}>
-                    <Ionicons name="person-circle" size={50} color="#ccc" />
-            </View>
-        {/*)}*/}
-        <View style={styles.messageContent}>
-            <Text style={styles.messageName}>Thabang</Text>
-            <Text style={styles.messageText}>How can I be of assistance?</Text>
-        </View>
-        <Text style={styles.messageTime}>45mins</Text>
-    </TouchableOpacity>
-);
+
 
 const styles = StyleSheet.create({
     container: {
@@ -113,44 +177,7 @@ const styles = StyleSheet.create({
     scrollViewContainer: {
         paddingVertical: 10,
     },
-    messageCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f0f8ff',
-        padding: 10,
-        marginBottom: 3,
-        borderRadius: 10,
-    },
-    messageImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 10,
-    },
-    placeholderIcon: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 10,
-    },
-    messageContent: {
-        flex: 1,
-    },
-    messageName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#00243a',
-    },
-    messageText: {
-        fontSize: 14,
-        color: '#4a4a4a',
-    },
-    messageTime: {
-        fontSize: 12,
-        color: '#888',
-    },
+
 });
 
 export default ChatScreen;

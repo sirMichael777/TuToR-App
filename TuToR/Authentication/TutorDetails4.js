@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Modal, ScrollView, ActivityIndicator } from 'react-native'; //// Added ActivityIndicator import
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+  Dimensions,
+  Platform,
+  Modal,
+  ScrollView,
+  ActivityIndicator,
+  KeyboardAvoidingView
+} from 'react-native'; //// Added ActivityIndicator import
 import RNPickerSelect from 'react-native-picker-select';
 import { doc, setDoc } from "firebase/firestore";
 import { firebaseAuth, firestoreDB } from "../Config/firebaseConfig";
@@ -93,9 +106,10 @@ export default function TutorDetails4({ route, navigation }) {
       const userCredential = await createUserWithEmailAndPassword(firebaseAuth, email, password);
       const userId = userCredential.user.uid;
 
-      await setDoc(doc(firestoreDB, 'Tutors', userId), {
+      // Construct the user object
+      const userDets = {
         _id: userId,
-        firstName,
+        name: firstName,
         lastName,
         imageUrl: '',
         phoneNumber,
@@ -111,8 +125,12 @@ export default function TutorDetails4({ route, navigation }) {
         rate,
         role,
         createdAt: new Date(),
-      });
+      };
 
+      // Save the user object to the 'Tutors' collection
+      await setDoc(doc(firestoreDB, 'Tutors', userId), userDets);
+
+      // Save the user data to the 'users' collection
       const data = {
         _id: userCredential?.user.uid,
         ImageUrl: '',
@@ -121,11 +139,13 @@ export default function TutorDetails4({ route, navigation }) {
         phoneNumber: phoneNumber,
         role: role,
         providerData: userCredential.user.providerData[0] || null,
-      }
+      };
       await setDoc(doc(firestoreDB, 'users', userId), data);
 
       setLoading(false); //// Stop loading after success
-      navigation.navigate('TutorDetails5', { userId });
+
+      // Pass the entire user object to the next screen
+      navigation.navigate('TutorDetails5', { userDets });
 
     } catch (error) {
       setLoading(false); //// Stop loading on error
@@ -138,8 +158,13 @@ export default function TutorDetails4({ route, navigation }) {
     }
   };
 
+
   return (
-    <View style={styles.container}>
+      <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
 
       <ImageBackground
         source={require('../assets/images/LoadingPage.png')}
@@ -270,7 +295,8 @@ export default function TutorDetails4({ route, navigation }) {
           </View>
         </View>
       </Modal>
-    </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
 

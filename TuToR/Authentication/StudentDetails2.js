@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ImageBackground, StyleSheet, Dimensions, Alert, ActivityIndicator } from 'react-native';
+import {
+  Platform,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ImageBackground,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  ActivityIndicator,
+  ScrollView, KeyboardAvoidingView
+} from 'react-native';
 import {createUserWithEmailAndPassword} from "firebase/auth";
 import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
 import {doc, setDoc} from "firebase/firestore";
@@ -55,57 +67,63 @@ export default function StudentDetails2({ route,navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <ImageBackground 
-        source={require('../assets/images/LoadingPage.png')} 
-        style={styles.background}
-        imageStyle={styles.imageStyle}
+      <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
-          <Text style={[styles.title, { fontSize: width * 0.05 }]}>Complete your details</Text>
-          
-          <TextInput 
-            placeholder="First Name" 
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-          
-          <TextInput 
-            placeholder="Last Name" 
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
-            value={lastName}
-            onChangeText={setLastName}
-          />
-          
-          <TextInput 
-            placeholder="Phone Number" 
-            keyboardType="phone-pad"
-            style={[styles.input, { paddingVertical: height * 0.02 }]} 
-            placeholderTextColor="#a9a9a9" 
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-          />
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <ImageBackground
+            source={require('../assets/images/LoadingPage.png')}
+            style={styles.background}
+            imageStyle={styles.imageStyle}
+        >
 
-          <TouchableOpacity 
-            style={[styles.button, { paddingVertical: height * 0.02 }]}
-            onPress={handleCreateAccount}
-            disabled={loading}
-          >
-            {loading ? ( //// Show loading spinner when loading
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Create Account</Text>
-              )}
-          </TouchableOpacity>
-        </View>
-      </ImageBackground>
-    </View>
+            <View style={[styles.contentContainer, { padding: width * 0.05, marginTop: height * 0.15 }]}>
+              <Text style={[styles.title, { fontSize: width * 0.05 }]}>Complete your details</Text>
+
+              <TextInput
+                  placeholder="First Name"
+                  style={[styles.input, { paddingVertical: height * 0.02 }]}
+                  placeholderTextColor="#a9a9a9"
+                  value={firstName}
+                  onChangeText={setFirstName}
+              />
+
+              <TextInput
+                  placeholder="Last Name"
+                  style={[styles.input, { paddingVertical: height * 0.02 }]}
+                  placeholderTextColor="#a9a9a9"
+                  value={lastName}
+                  onChangeText={setLastName}
+              />
+
+              <TextInput
+                  placeholder="Phone Number"
+                  keyboardType="phone-pad"
+                  style={[styles.input, { paddingVertical: height * 0.02 }]}
+                  placeholderTextColor="#a9a9a9"
+                  value={phoneNumber}
+                  onChangeText={setPhoneNumber}
+              />
+
+              <TouchableOpacity
+                  style={[styles.button, { paddingVertical: height * 0.02 }]}
+                  onPress={handleCreateAccount}
+                  disabled={loading}
+              >
+                {loading ? ( //// Show loading spinner when loading
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                    <Text style={[styles.buttonText, { fontSize: width * 0.04 }]}>Create Account</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+        </ImageBackground>
+        </ScrollView>
+      </KeyboardAvoidingView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

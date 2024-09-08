@@ -1,12 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import MessageListener from "../Chat/MessageListener";
 
 const { width, height } = Dimensions.get('window');
 
 const TutorHomeScreen = ({ navigation }) => {
     return (
         <View style={styles.container}>
+            <MessageListener navigation={navigation}/>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Home</Text>
                 <View style={styles.iconContainer}>

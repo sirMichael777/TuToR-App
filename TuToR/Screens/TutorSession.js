@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import MessageListener from "../Chat/MessageListener";
 
 const { width, height } = Dimensions.get('window');
 
@@ -9,6 +10,7 @@ const SessionTutorScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <MessageListener/>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Sessions</Text>
                 <View style={styles.iconContainer}>
