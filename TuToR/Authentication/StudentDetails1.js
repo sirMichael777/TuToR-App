@@ -10,14 +10,17 @@ import {
   Dimensions,
   KeyboardAvoidingView, ScrollView
 } from 'react-native';
-import {isStrongPassword, isValidEmail} from "../ValidationUtils/ValidationUtils";
+import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for the eye icon
+import { isStrongPassword, isValidEmail } from "../ValidationUtils/ValidationUtils";
 
 
-export default function StudentDetails1({ route ,navigation }) {
-  const {role} = route.params;
+export default function StudentDetails1({ route, navigation }) {
+  const { role } = route.params;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // Manage password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Manage confirm password visibility
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
@@ -93,23 +96,35 @@ export default function StudentDetails1({ route ,navigation }) {
                   autoCapitalize="none"
               />
 
-              <TextInput
-                  placeholder="Password"
-                  secureTextEntry
-                  style={[styles.input, { paddingVertical: height * 0.02 }]}
-                  placeholderTextColor="#a9a9a9"
-                  value={password}
-                  onChangeText={setPassword}
-              />
+              {/* Password input with eye icon */}
+              <View style={styles.passwordContainer}>
+                <TextInput
+                    placeholder="Password"
+                    secureTextEntry={!showPassword}
+                    style={[styles.passwordInput, { paddingVertical: height * 0.02 }]}
+                    placeholderTextColor="#a9a9a9"
+                    value={password}
+                    onChangeText={setPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#a9a9a9" />
+                </TouchableOpacity>
+              </View>
 
-              <TextInput
-                  placeholder="Re-enter Password"
-                  secureTextEntry
-                  style={[styles.input, { paddingVertical: height * 0.02 }]}
-                  placeholderTextColor="#a9a9a9"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-              />
+              {/* Confirm password input with eye icon */}
+              <View style={styles.passwordContainer}>
+                <TextInput
+                    placeholder="Re-enter Password"
+                    secureTextEntry={!showConfirmPassword}
+                    style={[styles.passwordInput, { paddingVertical: height * 0.02 }]}
+                    placeholderTextColor="#a9a9a9"
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                />
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={24} color="#a9a9a9" />
+                </TouchableOpacity>
+              </View>
 
               <TouchableOpacity
                   style={[styles.button, { paddingVertical: height * 0.02 }]}
@@ -161,6 +176,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginVertical: 10,
     width: '100%',
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#F0F0F0',
+    borderRadius: 25,
+    marginVertical: 10,
+    width: '100%',
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  passwordInput: {
+    flex: 1,
   },
   button: {
     backgroundColor: '#00243a',
