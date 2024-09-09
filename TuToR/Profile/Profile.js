@@ -1,75 +1,77 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, ActivityIndicator } from 'react-native';
+import React, {useCallback} from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { firebaseAuth, firestoreDB } from '../Config/firebaseConfig'; // Import your firebase config
-import { doc, getDoc } from 'firebase/firestore';
+import { firebaseAuth } from '../Config/firebaseConfig'; // Import your firebase config
+import {signOut} from "firebase/auth";
+import {useSelector} from "react-redux";
+import {useFocusEffect} from "@react-navigation/native";
 
 const { width, height } = Dimensions.get('window');
 
 const ProfileScreen = ({ navigation }) => {
-    const [profileData, setProfileData] = useState(null);
-    const [loading, setLoading] = useState(true);
 
-    // Fetch user data from Firebase
-    const fetchUserProfile = async () => {
-        try {
-            const user = firebaseAuth.currentUser;
+    const currentUser = useSelector((state) => state.user.user);
 
-            if (user) {
-                // Get user profile data from Firestore
-                const userDocRef = doc(firestoreDB, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-
-                if (userDoc.exists()) {
-                    setProfileData(userDoc.data());
-                } else {
-                    console.error('No user data found!');
-                    Alert.alert('Error', 'No user data found in Firestore.');
-                }
-            } else {
-                console.error('No user is logged in!');
-                Alert.alert('Error', 'No user is currently logged in.');
-            }
-        } catch (error) {
-            console.error('Error fetching user data:', error);
-            Alert.alert('Error', 'Failed to fetch user data.');
-        } finally {
-            setLoading(false);
-        }
+    const handleLogOut = () => {
+        Alert.alert(
+            'Confirm Logout',
+            'Are you sure you want to log out?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Logout',
+                    onPress: async () => {
+                        try {
+                            await signOut(firebaseAuth); // Sign out from Firebase authentication
+                        } catch (error) {
+                            console.error('Error signing out:', error.message); // Handle any error during sign out
+                        }
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
     };
 
-    // Use useEffect to fetch data when the component mounts
-    useEffect(() => {
-        fetchUserProfile();
-    }, []);
+    useFocusEffect(
+        useCallback(() => {
+            // Here, you could refetch the user from the database if needed
+            // This is just a placeholder; assume your user state will automatically update from Redux
+            // e.g., after updating the user on the edit screen
+        }, [currentUser])
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#23cbfb" />
-                <Text>Loading Profile...</Text>
-            </View>
-        );
-    }
-
+    );
     return (
         <View style={styles.container}>
+            <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back-outline" size={28} color="#010202" />
+            </TouchableOpacity>
             <Text style={styles.headerText}>Profile</Text>
 
             <View style={styles.profileInfoContainer}>
                 <View style={styles.profileDetails}>
-                <Text style={styles.profileName}>
-                    {profileData?.name? `${profileData.name} ${profileData.lastName || ''}`: 'User Name'}
-                </Text>
+                    <Text style={styles.profileName}>
+                        {currentUser?.name ? `${currentUser.name} ${currentUser.lastName || ''}` : 'User Name'}
+                    </Text>
                     <Text style={styles.profileEmail}>
-                        {firebaseAuth.currentUser?.email || 'user@example.com'}
+                        {currentUser.providerData.email || 'user@example.com'}
                     </Text>
                 </View>
-                <TouchableOpacity onPress={() => { }}>
-                    <View style={styles.profileImagePlaceholder}>
-                        <Ionicons name="person-circle-outline" size={width * 0.15} color="#cccccc" />
-                    </View>
-                </TouchableOpacity>
+
+                    {currentUser.imageUrl ? (
+                        <Image
+                            source={{ uri: currentUser.imageUrl }}
+                            style={styles.profileImage}
+                        />
+                    ) : (
+                        <View style={styles.profileImagePlaceholder}>
+                            <Ionicons name="person-circle-outline" size={width * 0.15} color="#cccccc" />
+                        </View>
+                    )}
+
             </View>
 
             <View style={styles.optionsContainer}>
@@ -85,9 +87,9 @@ const ProfileScreen = ({ navigation }) => {
                     <Ionicons name="settings-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Settings</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('WelcomeScreen')}>
-                    <Ionicons name="log-out-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
-                    <Text style={styles.optionText}>Log out</Text>
+                <TouchableOpacity style={styles.optionButton} onPress={handleLogOut}>
+                    <Ionicons name="log-out-outline" size={width * 0.06} color="#F80606FF" style={styles.optionIcon} />
+                    <Text style={styles.optionLogText}>Log out</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -105,6 +107,11 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    backIcon: {
+        position: 'absolute',
+        left: 10,
+        top: height * 0.025,
     },
     headerText: {
         fontSize: width * 0.06, // 6% of screen width
@@ -158,6 +165,16 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: width * 0.045, // 4.5% of screen width
         fontWeight: 'bold',
+    },
+    optionLogText:{
+        color: '#F80606FF',
+        fontSize: width * 0.045, // 4.5% of screen width
+        fontWeight: 'bold',
+    },
+    profileImage: {
+        width: width * 0.15,
+        height: width * 0.15,
+        borderRadius: width * 0.075,
     },
 });
 

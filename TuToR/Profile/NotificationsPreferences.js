@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, Switch, StyleSheet, TouchableOpacity, Dimensions, ScrollView } from 'react-native';
+import {Ionicons} from "@expo/vector-icons";
 
-const { width, height } = Dimensions.get('window');
+const {  height } = Dimensions.get('window');
 
-const NotificationsPreferences = () => {
+const NotificationsPreferences = ({navigation}) => {
   // State variables for notification preferences
   const [sessionReminders, setSessionReminders] = useState(true);
   const [newTutorAvailability, setNewTutorAvailability] = useState(false);
@@ -23,6 +24,9 @@ const NotificationsPreferences = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back-outline" size={28} color="#010202" />
+      </TouchableOpacity>
       <Text style={styles.header}>Notification Preferences</Text>
 
       <View style={styles.preferenceRow}>
@@ -81,6 +85,11 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     marginBottom: 30,
+  },
+  backIcon: {
+    position: 'absolute',
+    left: 10,
+    top: height * 0.025,
   },
   preferenceRow: {
     flexDirection: 'row',
