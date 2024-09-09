@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Alert, ScrollView } from 'react-native';
 
-const { width, height } = Dimensions.get('window');
+const {  height } = Dimensions.get('window');
 
 const Payment = () => {
   const [amount, setAmount] = useState('');
