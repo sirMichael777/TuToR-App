@@ -18,14 +18,14 @@ import StudentDetails1 from "./Authentication/StudentDetails1";
 import StudentDetails2 from "./Authentication/StudentDetails2";
 import TermsAndConditions from "./Authentication/TermsAndConditions";
 import NotificationScreen from "./Screens/Notifications";
-import ProfileScreen from "./Screens/Profile";
-import PersonalInfo from './Screens/PersonalInfo';
-import Payment from "./Screens/Payment";
-import Settings from './Screens/Settings';
-import About from './Screens/About';
-import ChangePassword from './Screens/ChangePassword';
-import NotificationsPreferences from './Screens/NotificationsPreferences';
-import PrivacySettings from './Screens/PrivacySettings';
+import ProfileScreen from "./Profile/Profile";
+import PersonalInfo from './Profile/PersonalInfo';
+import Payment from "./Profile/Payment";
+import Settings from './Profile/Settings';
+import About from './Profile/About';
+import ChangePassword from './Profile/ChangePassword';
+import NotificationsPreferences from './Profile/NotificationsPreferences';
+import PrivacySettings from './Profile/PrivacySettings';
 import MainApp from './MainComponents/MainApp'
 import TutorMainApp from './MainComponents/TutorMain'
 import React from "react";
@@ -49,7 +49,7 @@ export default () => {
             <Stack.Screen name="SignInScreen" component={SignInScreen} />
             <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />
             <Stack.Screen name="EnterResetCodeScreen" component={EnterResetCodeScreen} />
-              <Stack.Screen name="TutorSearchScreen" component={TutorSearchScreen} />
+            <Stack.Screen name="TutorSearchScreen" component={TutorSearchScreen} />
             <Stack.Screen name="TutorDetails1" component={TutorDetails1} />
             <Stack.Screen name="TutorDetails2" component={TutorDetails2} />
             <Stack.Screen name="TutorDetails3" component={TutorDetails3} />
@@ -68,7 +68,7 @@ export default () => {
             <Stack.Screen name="ChangePassword" component={ChangePassword} />
             <Stack.Screen name="NotificationsPreferences" component={NotificationsPreferences} />
             <Stack.Screen name="PrivacySettings" component={PrivacySettings} />
-              <Stack.Screen name="ChatScreen" component={ChatScreen} />
+            <Stack.Screen name="ChatScreen" component={ChatScreen} />
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="TutorMainApp" component={TutorMainApp} />
           </Stack.Navigator>
