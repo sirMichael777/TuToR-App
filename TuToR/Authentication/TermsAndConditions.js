@@ -60,12 +60,13 @@ const TermsOfUseScreen = ({route, navigation }) => {
         >
             <View style={styles.container}>
                 <View style={styles.termsContainer}>
-                    <Text style={styles.header}>Terms of Use</Text>
+
                     <ScrollView 
                         style={styles.scrollView} 
                         onScroll={handleScroll} 
                         scrollEventThrottle={16}
                     >
+                        <Text style={styles.header}>Terms of Use</Text>
                         <Text style={styles.sectionTitle}>1. Introduction</Text>
                         <Text style={styles.sectionText}>
                             Welcome to TuToR, a mobile application designed to connect students with tutors. By using this app, you agree to comply with and be bound by the following terms of use. These terms govern your access to and use of the app, including any content, functionality, and services offered.
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
         flex: 1,
         top: 50,
         borderRadius: width * 0.05,
-        backgroundColor: '#001F3F',
+        backgroundColor: 'rgba(0, 36, 58, 0.6)',
         padding: width * 0.05,
         marginBottom: height * 0.02,
     },
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
     },
     sectionText: {
         fontSize: width * 0.04,
-        color: '#fff',
+        color: '#ffffff',
         marginBottom: height * 0.02,
         lineHeight: width * 0.06,
     },
