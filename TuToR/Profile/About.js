@@ -1,15 +1,21 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet, Dimensions, ImageBackground } from 'react-native';
+import {View, Text, ScrollView, StyleSheet, Dimensions, ImageBackground, TouchableOpacity} from 'react-native';
+import {Ionicons} from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get('window');
 
-const About = () => {
+const About = ({navigation}) => {
   return (
     <ImageBackground
       source={require('../assets/images/Student.png')} //Replace with your background image
       style={styles.background}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back-outline" size={28} color="#010202" />
+        </TouchableOpacity>
+        <View style={styles.aboutContainer}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
         <Text style={styles.header}>About TuToR</Text>
         
         <Text style={styles.sectionTitle}>Overview</Text>
@@ -106,6 +112,8 @@ const About = () => {
           Thank you for choosing TuToR. We look forward to being part of your educational journey and helping you achieve your goals!
         </Text>
       </ScrollView>
+        </View>
+      </View>
     </ImageBackground>
   );
 };
@@ -117,15 +125,30 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   container: {
-    top: height * 0.03,
-    padding: 20,
+    flex: 1,
+    paddingHorizontal: width * 0.05,
+    paddingVertical: height * 0.05,
+  },
+  backIcon: {
+    position: 'absolute',
+    left: 10,
+    top: height * 0.02,
+  },
+  aboutContainer:{
+    flex: 1,
+    top: 50,
+    borderRadius: width * 0.05,
+    backgroundColor: 'rgba(0, 36, 58, 0.6)',
+    padding: width * 0.05,
+    marginBottom: height * 0.02,
   },
   header: {
-    fontSize: 32,
+    fontSize: width * 0.07,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#000',
     textAlign: 'center',
+    marginBottom: height * 0.02,
+    textDecorationLine: 'underline',
+    color: '#ffff',
   },
   sectionTitle: {
     fontSize: 24,
@@ -135,7 +158,7 @@ const styles = StyleSheet.create({
   },
   sectionText: {
     fontSize: 16,
-    color: '#333',
+    color: '#ffffff',
     marginBottom: 20,
     lineHeight: 22,
   },
