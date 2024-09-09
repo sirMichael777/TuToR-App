@@ -13,13 +13,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { collection, getDocs } from 'firebase/firestore';
 import { firestoreDB } from '../Config/firebaseConfig';
+import {useSelector} from "react-redux";
 
 const TutorSearchScreen = ({ navigation }) => {
     const [users, setUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('All'); // Filter state for Tutors or Students
-
+    const currentUser = useSelector((state) => state.user.user);
 
     useEffect(() => {
         fetchUsers();
@@ -40,8 +41,8 @@ const TutorSearchScreen = ({ navigation }) => {
     const filteredUsers = users.filter(user => {
 
         const matchesSearchQuery =
-            user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.lastName.toLowerCase().includes(searchQuery.toLowerCase());
+            (user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.lastName.toLowerCase().includes(searchQuery.toLowerCase())) && (user._id !== currentUser._id);
 
         // If filter is 'All', show all users
         if (filter === 'All') {
