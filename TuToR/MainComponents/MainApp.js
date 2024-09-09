@@ -5,10 +5,12 @@ import SessionScreen from "../Screens/Session";
 import ChatScreen from "../Chat/Chat";
 import React from "react";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
+import useUserDataListener from "./UpdateData";
 
 const Tab = createBottomTabNavigator();
 
 export default function MainApp() {
+    useUserDataListener();
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
