@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image, Dimensions, ScrollView, ActivityIndicator} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useSelector} from "react-redux";
-import {collection, getDoc, onSnapshot, orderBy, query, where, limit, doc} from "firebase/firestore";
+import {collection, getDoc, onSnapshot, orderBy, query, where, doc} from "firebase/firestore";
 import {firestoreDB} from "../Config/firebaseConfig";
 import MessageCard from "./MessageCard";
 import MessageListener from "./MessageListener";
@@ -89,6 +89,13 @@ const ChatScreen = ({ navigation }) => {
         });
     }, [chatRooms]);
 
+    // Sort chatRooms based on the last message timestamp before rendering
+    const sortedChatRooms = [...chatRooms].sort((a, b) => {
+        const aLastMessageTime = lastMessages[a.id]?.timestamp?.seconds || 0;
+        const bLastMessageTime = lastMessages[b.id]?.timestamp?.seconds || 0;
+        console.log(bLastMessageTime - aLastMessageTime);
+        return bLastMessageTime - aLastMessageTime; // Sort by latest message first
+    });
 
     return (
         <View style={styles.container}>
@@ -118,7 +125,7 @@ const ChatScreen = ({ navigation }) => {
                         <ActivityIndicator size="large" color="#00243a" />
                     </View>
                 ) : (
-                    chatRooms.map((chatRoom) => (
+                    sortedChatRooms.map((chatRoom) => (
                         <MessageCard
                             key={chatRoom.id}
                             user={chatRoom.otherUser}
@@ -135,8 +142,6 @@ const ChatScreen = ({ navigation }) => {
         </View>
     );
 };
-
-
 
 const styles = StyleSheet.create({
     container: {
