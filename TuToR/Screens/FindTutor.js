@@ -6,7 +6,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import defaultPic from '../assets/images/defaultImage.jpeg'; // Adjust the path based on your project structure
-
+import {useSelector} from 'react-redux';
 
 const { width, height } = Dimensions.get('window');
 
@@ -27,8 +27,29 @@ const FindTutorScreen = ({ navigation }) => {
   const [selectedCourse, setSelectedCourse] = useState('');
   const [noTutorsFound, setNoTutorsFound] = useState(false);
   const [selectedMode, setSelectedMode] = useState('In Person');
-
+  const currentUser = useSelector((state) => state.user.user);
   const scrollViewRef = useRef();
+
+  const handleConfirmBooking = (tutor) => {
+      if (!selectedCourse || !date || !startTime || !endTime) {
+        alert('Please complete all the fields.');
+        return;
+      }
+
+      // Navigate to TutorDetailsScreen and pass the booking details in raw form
+      navigation.navigate('TutorDetailsScreen', {
+        tutor,
+        studentName: currentUser.name, // Pass the student name dynamically
+        startTime: startTime,     // Pass the raw Date object for start time
+        endTime: endTime,         // Pass the raw Date object for end time
+        tutoringDate: date,       // Pass the raw Date object for tutoring date
+        course: selectedCourse,   // Pass the selected course
+        requestTime: new Date(),  // Pass the current Date object for the request time
+        customRequest: customRequest || 'No special requests', // Pass any special requests or default
+        selectedMode: selectedMode, // Pass the selected mode (e.g., Online or In-Person)
+      });
+    };
+
 
   const options = [
     'Exam Preparation',
@@ -121,24 +142,36 @@ const FindTutorScreen = ({ navigation }) => {
       case 1:
         return (
           <View style={styles.stepContainer}>
+
+            <Text style={styles.labelText}>Select Date</Text>
             <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
-              <Text style={styles.buttonText}>Select Date</Text>
+              <Text style={styles.buttonText}>
+                {date ? date.toLocaleDateString() : "Select Date"}
+              </Text>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
                 value={date}
                 mode="date"
                 display="default"
+                minimumDate={new Date()}
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
-                  if (selectedDate) {
+                  if (selectedDate && selectedDate.setHours(0, 0, 0, 0) >= new Date().setHours(0, 0, 0, 0)) {
                     setDate(selectedDate);
+                  } else {
+                    alert("Please select a future date");
                   }
                 }}
               />
             )}
+
+
+            <Text style={styles.labelText}>Select Start Time</Text>
             <TouchableOpacity style={styles.timeButton} onPress={() => setShowStartTimePicker(true)}>
-              <Text style={styles.buttonText}>Select Start Time</Text>
+              <Text style={styles.buttonText}>
+                {startTime ? startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Select Start Time"}
+              </Text>
             </TouchableOpacity>
             {showStartTimePicker && (
               <DateTimePicker
@@ -147,18 +180,17 @@ const FindTutorScreen = ({ navigation }) => {
                 display="default"
                 onChange={(event, selectedTime) => {
                   setShowStartTimePicker(false);
-                  if (selectedTime) {
-                    setStartTime(selectedTime);
-                    if (endTime) {
-                      const duration = calculateDuration(selectedTime, endTime);
-                      setSessionDuration(duration);
-                    }
-                  }
+                  setStartTime(selectedTime);
                 }}
               />
             )}
+
+
+            <Text style={styles.labelText}>Select End Time</Text>
             <TouchableOpacity style={styles.timeButton} onPress={() => setShowEndTimePicker(true)}>
-              <Text style={styles.buttonText}>Select End Time</Text>
+              <Text style={styles.buttonText}>
+                {endTime ? endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Select End Time"}
+              </Text>
             </TouchableOpacity>
             {showEndTimePicker && (
               <DateTimePicker
@@ -168,20 +200,29 @@ const FindTutorScreen = ({ navigation }) => {
                 onChange={(event, selectedTime) => {
                   setShowEndTimePicker(false);
                   if (selectedTime) {
-                    setEndTime(selectedTime);
-                    if (startTime) {
-                      const duration = calculateDuration(startTime, selectedTime);
-                      setSessionDuration(duration);
+                    const oneHourInMillis = 60 * 60 * 1000;
+                    // Combine date and time for accurate comparison
+                    const startDateTime = new Date(date);
+                    startDateTime.setHours(startTime.getHours(), startTime.getMinutes(), 0, 0);
+
+                    const endDateTime = new Date(date);
+                    endDateTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
+
+                    // Check if the selected end time is at least 1 hour after the start time
+                    if (endDateTime - startDateTime < oneHourInMillis) {
+                      alert("End time must be at least 1 hour after the start time.");
+                    } else {
+                      setEndTime(selectedTime);
                     }
                   }
                 }}
               />
             )}
-            {sessionDuration !== '' && (
-              <Text style={styles.durationText}>Session Duration: {sessionDuration}</Text>
-            )}
+
           </View>
         );
+
+
       case 2:
         return (
           <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContainer}>
@@ -217,6 +258,7 @@ const FindTutorScreen = ({ navigation }) => {
           </ScrollView>
         );
       case 3:
+
         return (
           <View style={styles.stepContainer}>
             <View style={styles.modeContainer}>
@@ -263,7 +305,7 @@ const FindTutorScreen = ({ navigation }) => {
                           R{tutor.rate || 'N/A'}/hr
                         </Text>
                       </View>
-                      <TouchableOpacity style={styles.selectButton}>
+                      <TouchableOpacity style={styles.selectButton} onPress={() => handleConfirmBooking(tutor)}>
                         <Text style={styles.selectButtonText}>Select</Text>
                       </TouchableOpacity>
                     </View>
@@ -317,7 +359,17 @@ const FindTutorScreen = ({ navigation }) => {
         <TouchableOpacity
           style={styles.nextButton}
           onPress={() => {
-            if (currentStep === 2) {
+            if (currentStep === 0 && !selectedCourse) {
+              alert('Please select a course.');
+            } else if (currentStep === 1) {
+              if (!date || !startTime || !endTime) {
+                alert('Please select a date and time.');
+              } else if (startTime >= endTime) {
+                alert('Start time must be before the end time.');
+              } else {
+                setCurrentStep(currentStep + 1);
+              }
+            } else if (currentStep === 2) {
               if (!selectedOption || (selectedOption === 'Other/Custom Request' && !customRequest)) {
                 alert('Please select an option or enter a custom request.');
               } else {
@@ -330,9 +382,11 @@ const FindTutorScreen = ({ navigation }) => {
         >
           <Text style={styles.nextButtonText}>Next</Text>
         </TouchableOpacity>
+
       )}
     </View>
   );
+
 };
 
 const styles = StyleSheet.create({
@@ -558,6 +612,12 @@ const styles = StyleSheet.create({
       marginVertical: 10,
       height: 50,
       fontSize: 16,
+      color: '#000',
+    },
+    labelText: {
+      fontSize: width * 0.04,
+      fontWeight: 'bold',
+      marginBottom: height * 0.01,
       color: '#000',
     },
   },

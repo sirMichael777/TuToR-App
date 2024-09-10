@@ -33,6 +33,7 @@ import {createStackNavigator} from "@react-navigation/stack";
 import {StatusBar} from "react-native";
 import TutorSearchScreen from "./Chat/TutorSearchScreen";
 import ChatScreen from "./Chat/ChatScreen";
+import TutorDetailsScreen from './Screens/TutorDetailsScreen';
 
 
 const Stack = createStackNavigator();
@@ -68,9 +69,10 @@ export default () => {
             <Stack.Screen name="ChangePassword" component={ChangePassword} />
             <Stack.Screen name="NotificationsPreferences" component={NotificationsPreferences} />
             <Stack.Screen name="PrivacySettings" component={PrivacySettings} />
-              <Stack.Screen name="ChatScreen" component={ChatScreen} />
+            <Stack.Screen name="ChatScreen" component={ChatScreen} />
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="TutorMainApp" component={TutorMainApp} />
+            <Stack.Screen name="TutorDetailsScreen" component={TutorDetailsScreen} />
           </Stack.Navigator>
           <StatusBar style="auto" />
           </Provider>
