@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+    SafeAreaView,
   Platform, KeyboardAvoidingView, ScrollView
 } from 'react-native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -69,6 +70,7 @@ const PersonalInfo = () => {
       setLoading(true);
       const userDocRef = doc(firestoreDB, 'users', userId);
 
+      // Update user document in 'users' collection
       await updateDoc(userDocRef, {
         name: name,
         lastName: lastName,
@@ -78,6 +80,32 @@ const PersonalInfo = () => {
         imageUrl: profilePictureUrl,
       });
 
+      // Conditionally update additional collections (students or tutors)
+      if (currentUser.role === 'student') {
+        const studentDocRef = doc(firestoreDB, 'Students', userId);
+        await updateDoc(studentDocRef, {
+          name: name,
+          lastName: lastName,
+          phoneNumber: phoneNumber,
+          gender: gender,
+          address: address,
+          imageUrl: profilePictureUrl,
+        });
+      }
+
+      if (currentUser.role === 'tutor') {
+        const tutorDocRef = doc(firestoreDB, 'Tutors', userId);
+        await updateDoc(tutorDocRef, {
+          name: name,
+          lastName: lastName,
+          phoneNumber: phoneNumber,
+          gender: gender,
+          address: address,
+          imageUrl: profilePictureUrl,
+        });
+      }
+
+      setIsEditing(false);
       Alert.alert('Success', 'Your information has been updated.');
 
     } catch (error) {
@@ -127,6 +155,7 @@ const PersonalInfo = () => {
   }
 
   return (
+      <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
           style={styles.container}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -225,10 +254,15 @@ const PersonalInfo = () => {
         )}
         </ScrollView>
       </KeyboardAvoidingView>
+      </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
   container: {
     flex: 1,
     padding: width * 0.05,

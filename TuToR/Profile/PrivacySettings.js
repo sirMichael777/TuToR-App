@@ -24,11 +24,12 @@ const PrivacySettings = ({navigation}) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.headerContainer}>
       <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back-outline" size={28} color="#010202" />
       </TouchableOpacity>
-      <Text style={styles.header}>Privacy Settings</Text>
-
+      <Text style={styles.headerText}>Privacy Settings</Text>
+      </View>
       <View style={styles.settingRow}>
         <Text style={styles.settingText}>Profile Visibility</Text>
         <Switch
@@ -79,17 +80,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     minHeight: height,
   },
-  header: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 30,
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 20,
   },
   backIcon: {
-    position: 'absolute',
-    left: 10,
-    top: height * 0.025,
+    padding: 10, // Increased padding for better touchable area
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    flex: 1, // Center the text with flex
   },
   settingRow: {
     flexDirection: 'row',
