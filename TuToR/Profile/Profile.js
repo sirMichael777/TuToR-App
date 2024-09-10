@@ -79,7 +79,7 @@ const ProfileScreen = ({ navigation }) => {
                     <Ionicons name="pencil-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Personal Information</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('Payment')}>
+                <TouchableOpacity style={styles.optionButton} onPress={() => navigation.navigate('PaymentPage')}>
                     <Ionicons name="card-outline" size={width * 0.06} color="#ffffff" style={styles.optionIcon} />
                     <Text style={styles.optionText}>Payment</Text>
                 </TouchableOpacity>
