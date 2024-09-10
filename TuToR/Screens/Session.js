@@ -1,25 +1,35 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions,Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import MessageListener from "../Chat/MessageListener";
+import {useSelector} from "react-redux";
 
 const { width, height } = Dimensions.get('window');
 
 const SessionsScreen = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState('Scheduled');
-
+    const currentUser = useSelector((state) => state.user.user);
     return (
         <View style={styles.container}>
             <MessageListener navigation={navigation}/>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Sessions</Text>
                 <View style={styles.iconContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-                        <Ionicons name="notifications-outline" size={24} color="black" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-                        <Ionicons name="person-outline" size={24} color="black" style={styles.profileIcon} />
-                    </TouchableOpacity>
+                    <View style={styles.iconContainer}>
+                        <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
+                            <Ionicons name="notifications-outline" size={30} color="black" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+                            {currentUser?.imageUrl ? (
+                                <Image
+                                    source={{ uri: currentUser.imageUrl }}
+                                    style={styles.profileImage} // Add the style for the profile image
+                                />
+                            ) : (
+                                <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
+                            )}
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
 
@@ -69,6 +79,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     profileIcon: {
+        marginLeft: 15,
+    },
+    profileImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 15, // Make it circular
         marginLeft: 15,
     },
     tabContainer: {
