@@ -4,10 +4,19 @@ import React from "react";
 
 
 function renderMessageText(lastMessage, lastMessageSenderId, currentUserId, isRead) {
+    const maxLength = 60; // Set the max length for the message before truncating
+
+    const truncateMessage = (message) => {
+        return message.length > maxLength
+            ? `${message.substring(0, maxLength)}...` // Truncate and add ellipsis
+            : message;
+    };
+
     if (lastMessageSenderId === currentUserId) {
-        return `You: ${lastMessage}`;
+        return `You: ${truncateMessage(lastMessage)}`;
     }
-    return isRead ? lastMessage : `New Message: ${lastMessage}`;
+
+    return isRead ? truncateMessage(lastMessage) : `New Message: ${truncateMessage(lastMessage)}`;
 }
 
 
@@ -16,10 +25,11 @@ function formatTimestamp (timestamp) {
     return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
 }
 
-const MessageCard = ({ user, lastMessage, lastMessageTime, lastMessageSenderId, isRead, currentUserId, navigation }) => (
+const MessageCard = ({ user, lastMessage, lastMessageTime, lastMessageSenderId, isRead, currentUserId, navigation,onLongPress }) => (
     <TouchableOpacity
         style={styles.messageCard}
         onPress={() => navigation.navigate('ChatScreen', { user } )}
+        onLongPress={() => onLongPress(user)}
     >
         {user.imageUrl ? (
             <Image source={{ uri: user.imageUrl }} style={styles.messageImage} />
