@@ -33,6 +33,8 @@ import {createStackNavigator} from "@react-navigation/stack";
 import {StatusBar} from "react-native";
 import TutorSearchScreen from "./Chat/TutorSearchScreen";
 import ChatScreen from "./Chat/ChatScreen";
+import PaymentsPage from "./Profile/PaymentsPage";
+import TransactionHistory from "./Profile/TransactionHistory";
 
 
 const Stack = createStackNavigator();
@@ -68,6 +70,8 @@ export default () => {
             <Stack.Screen name="ChangePassword" component={ChangePassword} />
             <Stack.Screen name="NotificationsPreferences" component={NotificationsPreferences} />
             <Stack.Screen name="PrivacySettings" component={PrivacySettings} />
+            <Stack.Screen name="PaymentPage" component={PaymentsPage} />
+            <Stack.Screen name="TransactionHistory" component={TransactionHistory} />
             <Stack.Screen name="ChatScreen" component={ChatScreen} />
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="TutorMainApp" component={TutorMainApp} />
