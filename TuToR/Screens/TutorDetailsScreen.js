@@ -29,7 +29,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
 
       // Store the booking details in Firestore
       await setDoc(bookingRef, {
-        tutorId: bookingDetails.tutorId,
+        tutor: bookingDetails.tutorId,
         studentName: bookingDetails.studentName,
         course: bookingDetails.course,
         tutoringDate: bookingDetails.tutoringDate,
@@ -40,7 +40,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
         selectedMode: bookingDetails.selectedMode,
         status: 'pending',  // Booking status starts as 'pending'
         bookingRef: bookingRef.id,  // Include the generated booking reference (from the doc id)
-        studentId: currentUser._id,
+        student: currentUser,
       });
 
       // After storing, show confirmation
@@ -118,7 +118,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
             requestTime,
             customRequest,
             selectedMode,
-            tutorId: tutor._id, // Assuming there's a tutor ID to associate with the booking
+            tutor: tutor, // Assuming there's a tutor ID to associate with the booking
           });
         }}>
           <Text style={styles.bookButtonText}>Book a Session</Text>

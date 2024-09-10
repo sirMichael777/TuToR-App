@@ -75,9 +75,13 @@ const NotificationScreen = ({ navigation }) => {
         }
     };
 
-    const handleChat = (bookingRef) => {
-
-        navigation.navigate('ChatScreen', { bookingRef });
+    const handleChat = (booking) => {
+        if (currentUser.role === 'Student'){
+            navigation.navigate('ChatScreen', { booking.student });
+        } else{
+            navigation.navigate('ChatScreen', { booking.tutor});
+        }
+        
     };
 
     if (loading) {
@@ -105,7 +109,7 @@ const NotificationScreen = ({ navigation }) => {
                         role={role}
                         onAccept={() => handleAccept(booking.id)}
                         onDecline={() => handleDecline(booking.id)}
-                        onChatPress={() => handleChat(booking.id)}
+                        onChatPress={() => handleChat(booking)}
                     />
                 ))}
             </ScrollView>
