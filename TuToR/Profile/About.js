@@ -130,13 +130,11 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.05,
   },
   backIcon: {
-    position: 'absolute',
-    left: 10,
-    top: height * 0.02,
+   padding:10
   },
   aboutContainer:{
     flex: 1,
-    top: 50,
+    top: 20,
     borderRadius: width * 0.05,
     backgroundColor: 'rgba(0, 36, 58, 0.6)',
     padding: width * 0.05,
