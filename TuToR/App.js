@@ -17,7 +17,7 @@ import ApplicationStatus from "./Authentication/ApplicationStatus";
 import StudentDetails1 from "./Authentication/StudentDetails1";
 import StudentDetails2 from "./Authentication/StudentDetails2";
 import TermsAndConditions from "./Authentication/TermsAndConditions";
-import NotificationScreen from "./Screens/Notifications";
+import NotificationScreen from "./FindTutor/Notifications";
 import ProfileScreen from "./Profile/Profile";
 import PersonalInfo from './Profile/PersonalInfo';
 import Payment from "./Profile/Payment";

@@ -18,7 +18,6 @@ const FindTutorScreen = ({ navigation }) => {
   const [customRequest, setCustomRequest] = useState('');
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
-  const [sessionDuration, setSessionDuration] = useState('');
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [tutors, setTutors] = useState([]);

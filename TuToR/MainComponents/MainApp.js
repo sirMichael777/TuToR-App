@@ -1,6 +1,6 @@
 import {Ionicons} from "@expo/vector-icons";
 import StudentHome from "../Screens/StudentHome";
-import FindTutorScreen from "../Screens/FindTutor";
+import FindTutorScreen from "../FindTutor/FindTutor";
 import SessionScreen from "../Screens/Session";
 import ChatScreen from "../Chat/Chat";
 import React from "react";
