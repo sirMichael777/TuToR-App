@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Dimensions, Alert, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  ScrollView,
+  Platform,
+  KeyboardAvoidingView
+} from 'react-native';
 import { firestoreDB } from '../Config/firebaseConfig'; // Replace with your Firebase config
 import { doc, getDoc, updateDoc, collection, addDoc } from 'firebase/firestore';
 import { useSelector } from 'react-redux';
@@ -42,7 +53,7 @@ const Payment = ({navigation}) => {
   }, [currentUser]);
 
   const validateCardNumber = (number) => {
-    return /^[0-9]{10}$/.test(number); // 13-19 digits
+    return /^[0-9]{10,16}$/.test(number); // 13-19 digits
   };
 
   const validateCVV = (cvv) => {
@@ -138,6 +149,10 @@ const Payment = ({navigation}) => {
 
 
   return (
+      <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+      >
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.headerContainer}>
           <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
@@ -222,6 +237,7 @@ const Payment = ({navigation}) => {
           <Text style={styles.paymentButtonText}>{loading? "loading Payment":"Proceed to Payment"}</Text>
         </TouchableOpacity>
       </ScrollView>
+</KeyboardAvoidingView>
   );
 };
 
