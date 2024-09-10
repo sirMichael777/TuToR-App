@@ -11,7 +11,6 @@ const ChangePassword = ({ navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [showCurrentPassword, setShowCurrentPassword] = useState(false); // Toggle current password visibility
   const [showNewPassword, setShowNewPassword] = useState(false); // Toggle new password visibility
   const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Toggle confirm password visibility
@@ -63,10 +62,12 @@ const ChangePassword = ({ navigation }) => {
 
   return (
       <ScrollView contentContainerStyle={styles.container}>
-        <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={28} color="#010202" />
-        </TouchableOpacity>
-        <Text style={styles.header}>Change Password</Text>
+        <View style={styles.headerContainer}>
+          <TouchableOpacity style={styles.backIcon} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back-outline" size={28} color="#010202" />
+          </TouchableOpacity>
+          <Text style={styles.headerText}>Change Password</Text>
+        </View>
 
         <Text style={styles.label}>Current Password</Text>
         <View style={styles.inputContainer}>
@@ -151,17 +152,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
     minHeight: height,
   },
-  backIcon: {
-    position: 'absolute',
-    left: 10,
-    top: height * 0.025,
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 20,
   },
-  header: {
-    fontSize: 28,
+  backIcon: {
+    padding: 10, // Increased padding for better touchable area
+  },
+  headerText: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
     textAlign: 'center',
-    marginBottom: 30,
+    flex: 1, // Center the text with flex
   },
   label: {
     fontSize: 16,
