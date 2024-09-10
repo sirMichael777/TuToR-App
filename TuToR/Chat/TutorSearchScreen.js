@@ -94,7 +94,14 @@ const TutorSearchScreen = ({ navigation }) => {
                 <Ionicons name="arrow-back-outline" size={28} color="#00243a" onPress={() => navigation.goBack()} />
                 <Text style={styles.headerTitle}>Chat</Text>
                 <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-                    <Ionicons name="person-circle-outline" size={30} color="#00243a" />
+                    {currentUser?.imageUrl ? (
+                        <Image
+                            source={{ uri: currentUser.imageUrl }}
+                            style={styles.profileImage} // Add the style for the profile image
+                        />
+                    ) : (
+                        <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
+                    )}
                 </TouchableOpacity>
             </View>
 
@@ -153,6 +160,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
         paddingHorizontal: 15,
         paddingVertical: 15,
+    },
+    profileImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 15, // Make it circular
+        marginLeft: 15,
     },
     headerTitle: {
         fontSize: 18,
