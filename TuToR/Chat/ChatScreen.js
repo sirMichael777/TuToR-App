@@ -11,6 +11,7 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Image
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {addDoc, collection, doc, getDoc, getDocs, onSnapshot, orderBy, query, setDoc, where,updateDoc,arrayUnion} from 'firebase/firestore';
