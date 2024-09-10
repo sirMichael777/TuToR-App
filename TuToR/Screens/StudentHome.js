@@ -9,6 +9,9 @@ const { width, height } = Dimensions.get('window');
 const HomeScreen = ({ navigation }) => {
 
     const currentUser = useSelector((state) => state.user.user);
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount);
+    };
 
     return (
         <View style={styles.container}>
@@ -16,23 +19,31 @@ const HomeScreen = ({ navigation }) => {
             <View style={styles.header}>
                 <Text style={styles.headerText}>Home</Text>
                 <View style={styles.iconContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-                        <Ionicons name="notifications-outline" size={24} color="black" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-                        <Ionicons name="person-outline" size={24} color="black" style={styles.profileIcon} />
-                    </TouchableOpacity>
+                    <View style={styles.iconContainer}>
+                        <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
+                            <Ionicons name="notifications-outline" size={30} color="black" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+                            {currentUser?.imageUrl ? (
+                                <Image
+                                    source={{ uri: currentUser.imageUrl }}
+                                    style={styles.profileImage} // Add the style for the profile image
+                                />
+                            ) : (
+                                <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
+                            )}
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
 
 
             <Text style={styles.balanceText}>Current Balance</Text>
-            <Text style={styles.balanceAmount}>0.0 ZAR</Text>
+            <Text style={styles.balanceAmount}>{formatCurrency(currentUser.Balance)} ZAR</Text>
 
             <View style={styles.findTutorSection}>
                 <Text style={styles.findTutorText}>Connecting UCT students with top tutors</Text>
                 <Image source={require('../assets/images/background-image.png')} style={styles.backgroundImage} />
-
                 <TouchableOpacity style={styles.findTutorButton} onPress={() => navigation.navigate('FindTutor')}>
                     <Text style={styles.findTutorButtonText}>Find A Tutor</Text>
                 </TouchableOpacity>
@@ -63,7 +74,7 @@ const styles = StyleSheet.create({
         padding: width * 0.05, // 5% of screen width
     },
     header: {
-        top:height*0.03,
+        top:height*0.04,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -80,13 +91,19 @@ const styles = StyleSheet.create({
     profileIcon: {
         marginLeft: 15,
     },
+    profileImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 15, // Make it circular
+        marginLeft: 15,
+    },
     balanceText: {
-
+        top:height*0.02,
         color: '#008000',
-        marginTop: height * 0.01, // 1% of screen height
+        marginTop: height * 0.02, // 1% of screen height
     },
     balanceAmount: {
-
+        top:height*0.02,
         color: '#008000',
         fontWeight: 'bold',
         fontSize: width * 0.05, // 5% of screen width
