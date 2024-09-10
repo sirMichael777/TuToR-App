@@ -29,7 +29,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
 
       // Store the booking details in Firestore
       await setDoc(bookingRef, {
-        tutor: bookingDetails.tutorId,
+        tutor: bookingDetails.tutor,
         studentName: bookingDetails.studentName,
         course: bookingDetails.course,
         tutoringDate: bookingDetails.tutoringDate,

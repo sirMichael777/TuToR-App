@@ -27,10 +27,12 @@ const NotificationScreen = ({ navigation }) => {
 
         const fetchBookings = async () => {
             try {
+                const fieldToQuery = role === 'Tutor' ? 'tutor._id' : 'student._id';  // Determine the correct field to query
+
                 // Query based on user role (tutor or student)
                 const bookingsQuery = query(
                     collection(firestoreDB, 'Bookings'),
-                    where(role === 'Tutor' ? 'tutorId' : 'studentName', '==', role === 'Tutor' ? currentUser._id : currentUser.name)
+                    where(fieldToQuery, '==', currentUser._id)  // Use the correct field and the current user's ID
                 );
 
                 return onSnapshot(bookingsQuery, (snapshot) => {
@@ -46,6 +48,7 @@ const NotificationScreen = ({ navigation }) => {
                 setLoading(false);
             }
         };
+
 
         if (currentUser) {
             fetchBookings();
@@ -76,12 +79,12 @@ const NotificationScreen = ({ navigation }) => {
     };
 
     const handleChat = (booking) => {
+
         if (currentUser.role === 'Student'){
-            navigation.navigate('ChatScreen', { booking.student });
+            navigation.navigate('ChatScreen', { user: booking.tutor });
         } else{
-            navigation.navigate('ChatScreen', { booking.tutor});
+            navigation.navigate('ChatScreen', { user: booking.student });
         }
-        
     };
 
     if (loading) {
