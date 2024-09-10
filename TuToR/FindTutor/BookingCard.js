@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 
 const formatFirestoreDate = (timestamp) => {
-
     return timestamp?.seconds
         ? new Date(timestamp.seconds * 1000).toLocaleString('en-GB', {
             hour: '2-digit',
@@ -19,7 +18,12 @@ const formatFirestoreDate = (timestamp) => {
 
 
 const BookingCard = ({ booking, onAccept, onDecline, onChatPress, role }) => {
-    const { studentName, startTime, endTime, tutoringDate, status, bookingRef } = booking;
+    const { tutor, student, startTime, endTime, tutoringDate, status, bookingRef } = booking;
+
+    // Determine whether to show the student or tutor information based on role
+    const personName = role === 'Student'
+        ? `${tutor.name} ${tutor.lastName}` // Display tutor's name for students
+        : `${student.name} ${student.lastName}`; // Display student's name for tutors
 
     return (
         <View style={styles.cardContainer}>
@@ -28,11 +32,12 @@ const BookingCard = ({ booking, onAccept, onDecline, onChatPress, role }) => {
                 <Text style={styles.bookingDate}>{formatFirestoreDate(tutoringDate)}</Text>
             </View>
 
-            <Text style={styles.bookingDetails}>Student: {studentName}</Text>
+            {/* Display person name based on role */}
+            <Text style={styles.bookingDetails}>{role === 'Student' ? `Tutor: ${personName}` : `Student: ${personName}`}</Text>
             <Text style={styles.bookingDetails}>Starting at: {formatFirestoreDate(startTime)}</Text>
             <Text style={styles.bookingDetails}>Ending at: {formatFirestoreDate(endTime)}</Text>
 
-
+            {/* Pending status for tutors */}
             {status === 'pending' && role === 'Tutor' ? (
                 <View style={styles.actionButtonsContainer}>
                     <TouchableOpacity style={styles.acceptButton} onPress={onAccept}>
@@ -54,9 +59,15 @@ const BookingCard = ({ booking, onAccept, onDecline, onChatPress, role }) => {
                     </Text>
                     <Text style={styles.refText}>ref: {bookingRef}</Text>
                     <Text style={styles.infoText}>
-                        {status === 'accepted'
-                            ? 'Please chat to the tutor to find out about the venue/more details.'
-                            : 'Please try another tutor or chat to the tutor for more information.'}
+                        {status === 'accepted' ? (
+                            role === 'Student' ?
+                                'Please chat to the tutor to find out about the venue/more details.' :
+                                'Please chat to the Student and find out more information about your session.'
+                        ) : (
+                            role === 'Student' ?
+                                'Please try another tutor or chat to the tutor for more information.' :
+                                'Please let the student know why you declined the booking.'
+                        )}
                     </Text>
                 </View>
             )}
@@ -67,6 +78,7 @@ const BookingCard = ({ booking, onAccept, onDecline, onChatPress, role }) => {
         </View>
     );
 };
+
 
 const styles = StyleSheet.create({
     cardContainer: {

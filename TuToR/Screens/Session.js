@@ -11,7 +11,6 @@ const SessionsScreen = ({ navigation }) => {
     const currentUser = useSelector((state) => state.user.user);
     return (
         <View style={styles.container}>
-            <MessageListener navigation={navigation}/>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Sessions</Text>
                 <View style={styles.iconContainer}>
