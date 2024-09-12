@@ -1,48 +1,97 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
+import { firestoreDB } from "../Config/firebaseConfig";
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import MessageListener from "../Chat/MessageListener";
 
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
-
     const currentUser = useSelector((state) => state.user.user);
+    const [upcomingSession, setUpcomingSession] = useState(null); // Store only one upcoming session
+
+    // Fetch upcoming sessions for the current user (Student) and filter to show only scheduled ones
+    useEffect(() => {
+        const fetchUpcomingSession = async () => {
+            try {
+                if (currentUser.role === 'Student') {
+                    const q = query(
+                        collection(firestoreDB, 'Bookings'),
+                        where('student._id', '==', currentUser._id),
+                        where('status', '==', 'scheduled'),
+                        orderBy('startTime'), // Order by start time
+                        limit(1) // Fetch only the first one
+                    );
+
+                    const querySnapshot = await getDocs(q);
+                    const session = querySnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }))[0]; // Get the first (and only) session
+
+                    setUpcomingSession(session);
+                }
+            } catch (error) {
+                console.error("Error fetching upcoming session:", error);
+            }
+        };
+
+        fetchUpcomingSession();
+    }, [currentUser]);
+
+    // Format currency
     const formatCurrency = (amount) => {
         return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount);
     };
 
+    // Conditionally render for students only
+    if (currentUser.role !== 'Student') {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.errorMessage}>
+                    This screen is for students only. Please navigate to your dashboard.
+                </Text>
+                <TouchableOpacity
+                    style={styles.tutorButton}
+                    onPress={() => navigation.navigate('TutorDashboard')}
+                >
+                    <Text style={styles.tutorButtonText}>Go to Tutor Dashboard</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
-            <MessageListener navigation={navigation}/>
+            <MessageListener navigation={navigation} />
             <View style={styles.header}>
                 <Text style={styles.headerText}>Home</Text>
                 <View style={styles.iconContainer}>
-                    <View style={styles.iconContainer}>
-                        <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-                            <Ionicons name="notifications-outline" size={30} color="black" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-                            {currentUser?.imageUrl ? (
-                                <Image
-                                    source={{ uri: currentUser.imageUrl }}
-                                    style={styles.profileImage} // Add the style for the profile image
-                                />
-                            ) : (
-                                <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
-                            )}
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
+                        <Ionicons name="notifications-outline" size={30} color="black" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+                        {currentUser?.imageUrl ? (
+                            <Image
+                                source={{ uri: currentUser.imageUrl }}
+                                style={styles.profileImage}
+                            />
+                        ) : (
+                            <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
+                        )}
+                    </TouchableOpacity>
                 </View>
             </View>
-
 
             <Text style={styles.balanceText}>Current Balance</Text>
             <Text style={styles.balanceAmount}>{formatCurrency(currentUser.Balance)} ZAR</Text>
 
             <View style={styles.findTutorSection}>
-                <Text style={styles.findTutorText}>Connecting UCT students with top tutors</Text>
+                <Text style={styles.findTutorText}>
+                    Connecting UCT students with top tutors
+                </Text>
                 <Image source={require('../assets/images/background-image.png')} style={styles.backgroundImage} />
                 <TouchableOpacity style={styles.findTutorButton} onPress={() => navigation.navigate('FindTutor')}>
                     <Text style={styles.findTutorButtonText}>Find A Tutor</Text>
@@ -51,18 +100,30 @@ const HomeScreen = ({ navigation }) => {
 
             <View style={styles.sessionsSection}>
                 <View style={styles.sessionsHeader}>
-                    <Text style={styles.sessionsText}>Upcoming sessions</Text>
-                    <TouchableOpacity onPress={() => {}}>
+                    <Text style={styles.sessionsText}>Upcoming session</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('SessionsScreen')}>
                         <Text style={styles.viewAllText}>view all</Text>
                     </TouchableOpacity>
                 </View>
-                <View style={styles.noSessionsCard}>
-                    <Image source={require('../assets/Calendar.png')} style={styles.calendarIcon} />
-                    <Text style={styles.noSessionsText}>No booked sessions</Text>
-                </View>
+
+                {upcomingSession ? (
+                    <View style={styles.sessionCard}>
+                        <Text>Course: {upcomingSession.course}</Text>
+                        <Text>
+                            Start: {new Date(upcomingSession.startTime.seconds * 1000).toLocaleString()}
+                        </Text>
+                        <Text>
+                            End: {new Date(upcomingSession.endTime.seconds * 1000).toLocaleString()}
+                        </Text>
+                        <Text>Status: {upcomingSession.status}</Text>
+                    </View>
+                ) : (
+                    <View style={styles.noSessionsCard}>
+                        <Image source={require('../assets/Calendar.png')} style={styles.calendarIcon} />
+                        <Text style={styles.noSessionsText}>No upcoming scheduled sessions</Text>
+                    </View>
+                )}
             </View>
-
-
         </View>
     );
 };
@@ -71,17 +132,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#ffffff',
-        padding: width * 0.05, // 5% of screen width
+        padding: width * 0.05,
     },
     header: {
-        top:height*0.04,
+        marginTop: height * 0.04,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 20,
     },
     headerText: {
-
         fontSize: 24,
         fontWeight: 'bold',
     },
@@ -94,54 +154,51 @@ const styles = StyleSheet.create({
     profileImage: {
         width: 30,
         height: 30,
-        borderRadius: 15, // Make it circular
+        borderRadius: 15,
         marginLeft: 15,
     },
     balanceText: {
-        top:height*0.02,
         color: '#008000',
-        marginTop: height * 0.02, // 1% of screen height
+        marginTop: height * 0.02,
     },
     balanceAmount: {
-        top:height*0.02,
         color: '#008000',
         fontWeight: 'bold',
-        fontSize: width * 0.05, // 5% of screen width
+        fontSize: width * 0.05,
     },
     findTutorSection: {
         backgroundColor: '#23cbfb',
-        borderRadius: width * 0.05, // 5% of screen width
-        overflow: 'hidden', // Ensure the image doesn't overflow the container's rounded corners
-        marginVertical: height * 0.03, // 3% of screen height
-        position: 'relative', // Allows absolute positioning of the button
+        borderRadius: width * 0.05,
+        overflow: 'hidden',
+        marginVertical: height * 0.03,
+        position: 'relative',
     },
     backgroundImage: {
         width: '130%',
-        top: height * 0.025, // 2.5% of screen height
-        right: width * 0.085, // 8% of screen width
-        height: height * 0.28, // 28% of screen height
-        resizeMode: 'cover', // Ensures the image covers the entire area
+        top: height * 0.025,
+        right: width * 0.085,
+        height: height * 0.28,
+        resizeMode: 'cover',
     },
     findTutorText: {
-        fontSize: width * 0.055, // 5.5% of screen width
+        fontSize: width * 0.055,
         fontWeight: 'bold',
         color: '#fff',
         textAlign: 'center',
-        marginVertical: height * 0.015, // 1.5% of screen height
+        marginVertical: height * 0.015,
     },
     findTutorButton: {
         position: 'absolute',
-        bottom: height * 0.02, // 2% of screen height
+        bottom: height * 0.02,
         left: '30%',
         backgroundColor: '#000',
-        paddingVertical: height * 0.01, // 1% of screen height
-        paddingHorizontal: width * 0.07, // 7% of screen width
-        borderRadius: width * 0.02, // 2% of screen width
+        paddingVertical: height * 0.01,
+        paddingHorizontal: width * 0.07,
+        borderRadius: width * 0.02,
     },
     findTutorButtonText: {
-
         color: '#ffffff',
-        fontSize: width * 0.04, // 4% of screen width
+        fontSize: width * 0.04,
     },
     sessionsSection: {
         flex: 1,
@@ -149,38 +206,56 @@ const styles = StyleSheet.create({
     sessionsHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: height * 0.015, // 1.5% of screen height
+        marginBottom: height * 0.015,
     },
     sessionsText: {
-        fontSize: width * 0.04, // 4% of screen width
+        fontSize: width * 0.04,
         fontWeight: 'bold',
     },
     viewAllText: {
         color: 'blue',
-        fontSize: width * 0.035, // 3.5% of screen width
+        fontSize: width * 0.035,
+    },
+    sessionCard: {
+        backgroundColor: '#007AFF',
+        padding: height * 0.02,
+        borderRadius: width * 0.03,
+        alignItems: 'center',
+        marginBottom: height * 0.02,
     },
     noSessionsCard: {
         backgroundColor: '#007AFF',
-        padding: height * 0.02, // 2% of screen height
-        borderRadius: width * 0.03, // 3% of screen width
+        padding: height * 0.02,
+        borderRadius: width * 0.03,
         alignItems: 'center',
-        flexDirection: 'row', // To align the icon and text horizontally
+        flexDirection: 'row',
     },
     calendarIcon: {
-        width: width * 0.08, // 8% of screen width
-        height: width * 0.08, // 8% of screen width
-        marginRight: width * 0.03, // 3% of screen width
+        width: width * 0.08,
+        height: width * 0.08,
+        marginRight: width * 0.03,
     },
     noSessionsText: {
-
         color: '#ffffff',
-        fontSize: width * 0.04, // 4% of screen width
+        fontSize: width * 0.04,
     },
-    bottomNavigation: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
+    errorMessage: {
+        fontSize: width * 0.05,
+        textAlign: 'center',
+        marginVertical: height * 0.1,
+        color: 'red',
+    },
+    tutorButton: {
+        backgroundColor: '#007AFF',
+        paddingVertical: height * 0.02,
+        paddingHorizontal: width * 0.1,
+        borderRadius: width * 0.03,
+        alignSelf: 'center',
+    },
+    tutorButtonText: {
+        color: '#ffffff',
+        fontSize: width * 0.045,
+        fontWeight: 'bold',
     },
 });
 

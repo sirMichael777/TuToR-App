@@ -1,7 +1,7 @@
 import {FontAwesome5, Ionicons} from "@expo/vector-icons";
 import TutorHomeScreen from "../Screens/TutorHomeScreen";
 import EarningsScreen from "../Screens/Earning";
-import TutorSessionScreen from "../Screens/TutorSession";
+import Session from "../Screens/Session";
 import ChatScreen from "../Chat/Chat";
 import React from "react";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
@@ -40,7 +40,7 @@ export default function TutorMainApp() {
         >
             <Tab.Screen name="Home" component={TutorHomeScreen} />
             <Tab.Screen name="Earnings" component={EarningsScreen} />
-            <Tab.Screen name="Sessions" component={TutorSessionScreen} />
+            <Tab.Screen name="Sessions" component={Session} />
             <Tab.Screen name="Chat" component={ChatScreen} />
         </Tab.Navigator>
     );
