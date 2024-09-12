@@ -10,35 +10,41 @@ const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
     const currentUser = useSelector((state) => state.user.user);
-    const [upcomingSession, setUpcomingSession] = useState(null); // Store only one upcoming session
+    const [upcomingSessions, setUpcomingSession] = useState([]); // Store up to two upcoming sessions
 
     // Fetch upcoming sessions for the current user (Student) and filter to show only scheduled ones
     useEffect(() => {
-        const fetchUpcomingSession = async () => {
+        const fetchUpcomingSessions = async () => {
             try {
                 if (currentUser.role === 'Student') {
                     const q = query(
                         collection(firestoreDB, 'Bookings'),
                         where('student._id', '==', currentUser._id),
-                        where('status', '==', 'scheduled'),
-                        orderBy('startTime'), // Order by start time
-                        limit(1) // Fetch only the first one
+                        where('status', 'in', ['scheduled', 'accepted']),
+                        orderBy('startTime'), // Order by startTime to get the next session first
+                        limit(2) // Fetch at most 2 sessions
                     );
 
                     const querySnapshot = await getDocs(q);
-                    const session = querySnapshot.docs.map(doc => ({
+                    const sessions = querySnapshot.docs.map(doc => ({
                         id: doc.id,
                         ...doc.data(),
-                    }))[0]; // Get the first (and only) session
+                    }));
 
-                    setUpcomingSession(session);
+                    if (sessions.length > 0) {
+                        console.log('Upcoming Sessions:', sessions);
+                        setUpcomingSession(sessions); // Set the sessions in state
+                    } else {
+                        console.log('No upcoming sessions found.');
+                        setUpcomingSession([]);
+                    }
                 }
             } catch (error) {
-                console.error("Error fetching upcoming session:", error);
+                console.error("Error fetching upcoming sessions:", error);
             }
         };
 
-        fetchUpcomingSession();
+        fetchUpcomingSessions();
     }, [currentUser]);
 
     // Format currency
@@ -106,23 +112,37 @@ const HomeScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                {upcomingSession ? (
-                    <View style={styles.sessionCard}>
-                        <Text>Course: {upcomingSession.course}</Text>
-                        <Text>
-                            Start: {new Date(upcomingSession.startTime.seconds * 1000).toLocaleString()}
-                        </Text>
-                        <Text>
-                            End: {new Date(upcomingSession.endTime.seconds * 1000).toLocaleString()}
-                        </Text>
-                        <Text>Status: {upcomingSession.status}</Text>
-                    </View>
+                {upcomingSessions.length > 0 ? (
+                    upcomingSessions.map((session) => (
+                        <View key={session.id} style={styles.sessionCard}>
+                            {/* Course Name */}
+                            <Text style={styles.sessionInfo}>Course: {session.course}</Text>
+
+                            {/* Date & Time */}
+                            <Text style={styles.sessionInfo}>
+                                Date: {new Date(session.startTime.seconds * 1000).toLocaleDateString()}{" "}
+                                Time: {new Date(session.startTime.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+
+                            {/* Duration */}
+                            <Text style={styles.sessionInfo}>
+                                Duration: {((session.endTime.seconds - session.startTime.seconds) / 3600).toFixed(1)} hours
+                            </Text>
+
+                            {/* Tutor's Name */}
+                            <Text style={styles.sessionInfo}>Tutor: {session.tutor.name} {session.tutor.lastName}</Text>
+
+                            {/* Status */}
+                            <Text style={styles.sessionStatus}>Status: {session.status}</Text>
+                        </View>
+                    ))
                 ) : (
                     <View style={styles.noSessionsCard}>
                         <Image source={require('../assets/Calendar.png')} style={styles.calendarIcon} />
                         <Text style={styles.noSessionsText}>No upcoming scheduled sessions</Text>
                     </View>
                 )}
+
             </View>
         </View>
     );
@@ -218,26 +238,36 @@ const styles = StyleSheet.create({
     },
     sessionCard: {
         backgroundColor: '#007AFF',
-        padding: height * 0.02,
-        borderRadius: width * 0.03,
-        alignItems: 'center',
-        marginBottom: height * 0.02,
+        padding: height * 0.015, // Reduced padding
+        borderRadius: width * 0.02, // Smaller border radius
+        marginBottom: height * 0.015, // Less margin between cards
+        alignItems: 'flex-start', // Align items to the left
+    },
+    sessionInfo: {
+        color: '#ffffff',
+        fontSize: width * 0.035, // Smaller font size
+        marginBottom: 4, // Reduced margin between lines
+    },
+    sessionStatus: {
+        color: '#ffcc00',
+        fontWeight: 'bold',
+        fontSize: width * 0.035, // Smaller font size
     },
     noSessionsCard: {
         backgroundColor: '#007AFF',
         padding: height * 0.02,
-        borderRadius: width * 0.03,
+        borderRadius: width * 0.02,
         alignItems: 'center',
         flexDirection: 'row',
     },
     calendarIcon: {
-        width: width * 0.08,
-        height: width * 0.08,
-        marginRight: width * 0.03,
+        width: width * 0.07, // Smaller calendar icon
+        height: width * 0.07,
+        marginRight: width * 0.02, // Less margin
     },
     noSessionsText: {
         color: '#ffffff',
-        fontSize: width * 0.04,
+        fontSize: width * 0.035, // Smaller text
     },
     errorMessage: {
         fontSize: width * 0.05,
