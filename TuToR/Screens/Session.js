@@ -1,22 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, StyleSheet, Dimensions, Image } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    ScrollView,
+    ActivityIndicator,
+    StyleSheet,
+    Dimensions,
+    Image,
+    Alert
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import {collection, query, where, getDocs, arrayUnion, updateDoc, doc, getDoc, addDoc} from 'firebase/firestore';
 import { firestoreDB } from '../Config/firebaseConfig';
 import { useSelector } from 'react-redux';
-import BookingCard from '../FindTutor/BookingCard';  // Assuming you are using BookingCard component
-import defaultImage from '../assets/images/defaultImage.jpeg';  // Assuming you have a default image
+import BookingCard from '../FindTutor/BookingCard';
+import SessionCard from "../FindTutor/SessionCard";
+import ReviewModal from "../FindTutor/ReviewModal";
+import NotificationIcon from "../Notifications/NotificationIcon";  // Assuming you are using BookingCard component
+
 
 const { width, height } = Dimensions.get('window');
 
 const Session = ({ navigation }) => {
-    const [sessions, setSessions] = useState([]);
+
     const [scheduledSessions, setScheduledSessions] = useState([]);
     const [completedSessions, setCompletedSessions] = useState([]);
-    const [ongoingSessions, setOngoingSessions] = useState([]);
+    const [enable,setEnable] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [reviewLoading, setReviewLoading] = useState(false);
     const [activeTab, setActiveTab] = useState('Scheduled');
     const currentUser = useSelector((state) => state.user.user);
+    const [isReviewModalVisible, setReviewModalVisible] = useState(false);
+    const [selectedSession, setSelectedSession] = useState(null);
 
     useEffect(() => {
         const fetchSessions = async () => {
@@ -47,24 +63,23 @@ const Session = ({ navigation }) => {
 
                 // Categorize sessions into Scheduled, Ongoing, and Completed based on current time
                 const scheduled = [];
-                const ongoing = [];
+
                 const completed = [];
 
                 allSessions.forEach((session) => {
+
                     const startTime = session.startTime.toDate();
                     const endTime = session.endTime.toDate();
 
-                    if (endTime < now) {
-                        completed.push(session);  // Session has ended
-                    } else if (startTime <= now && endTime >= now) {
-                        ongoing.push(session);  // Session is ongoing
+                    if (endTime < now && session.status === 'accepted' ||  session.status === 'completed') {
+                        setEnable(true);
+                        completed.push(session);
                     } else {
-                        scheduled.push(session);  // Session is scheduled for the future
+                        scheduled.push(session);
                     }
                 });
 
                 setScheduledSessions(scheduled);
-                setOngoingSessions(ongoing);
                 setCompletedSessions(completed);
                 setLoading(false);
             } catch (error) {
@@ -84,29 +99,141 @@ const Session = ({ navigation }) => {
         );
     }
 
+    const handleOpenReview = (session) => {
+        setSelectedSession(session);  // Set the session that will be reviewed
+        setReviewModalVisible(true);
+    };
+
+    const handleSubmitReview = async ({ rating, review }) => {
+        const isStudent = currentUser.role === 'Student';
+        const ratedPerson = isStudent ? selectedSession.tutor : selectedSession.student;  // Person being rated
+
+        if (!ratedPerson) return;
+
+        try {
+            setReviewLoading(true);
+
+            // Determine which collection to update based on the role (Tutors or Students)
+            const ratedPersonRef = doc(firestoreDB, isStudent ? 'Tutors' : 'Students', ratedPerson._id);
+
+            // Retrieve current data for the tutor or student being rated
+            const ratedPersonDoc = await getDoc(ratedPersonRef);
+            if (!ratedPersonDoc.exists()) {
+                console.error(`${isStudent ? 'Tutor' : 'Student'} document not found`);
+                alert(`${isStudent ? 'Tutor' : 'Student'} information not found.`);
+                return;
+            }
+
+            const ratedPersonData = ratedPersonDoc.data();
+            const currentRating = ratedPersonData.rating || 0;  // Default to 0 if no rating exists
+            const currentRatingCount = ratedPersonData.ratingCount || 0;  // Default to 0 if no rating count exists
+
+            // Calculate the new average rating
+            const newRatingCount = currentRatingCount + 1;
+            const newAverageRating = Number(((currentRating * currentRatingCount + rating) / newRatingCount).toFixed(1));
+
+            // Update the person's reviews and rating information in Firestore
+            await updateDoc(ratedPersonRef, {
+                reviews: arrayUnion({
+                    reviewerName: `${currentUser.name} ${currentUser.lastName}`,
+                    rating: rating,
+                    review: review,
+                    timestamp: new Date(),
+                }),
+                rating: newAverageRating, // Update the average rating
+                ratingCount: newRatingCount,  // Increment the rating count
+            });
+
+            setReviewLoading(false);
+            alert('Review submitted successfully!');
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            alert('Failed to submit the review, please try again.');
+        } finally {
+            setReviewLoading(false);
+            setReviewModalVisible(false);  // Close the modal after submission
+        }
+    };
+
+    const handleMarkAsComplete = async (session) => {
+        try {
+            const tutorRefInUsers = doc(firestoreDB, 'users', session.tutor._id);  // Reference to tutor in 'users' collection
+            const tutorRefInTutors = doc(firestoreDB, 'Tutors', session.tutor._id);  // Reference to tutor in 'Tutors' collection
+
+            // Fetch tutor data from the 'users' collection
+            const tutorDoc = await getDoc(tutorRefInUsers);
+            if (!tutorDoc.exists()) {
+                Alert.alert('Error', 'Tutor not found');
+                return;
+            }
+
+
+            const tutorData = tutorDoc.data();
+
+            const currentTutorBalance = tutorData.Balance || 0;  // Fetch the current balance of the tutor
+            const sessionCost = session.cost.toFixed(2);  // Ensure session cost has 2 decimal places
+
+            // Update the tutor's balance by adding the session cost
+            const newTutorBalance = parseFloat(currentTutorBalance) + parseFloat(sessionCost);
+
+            // Update the balance in both 'users' and 'Tutors' collections
+            await updateDoc(tutorRefInUsers, {
+                Balance: newTutorBalance.toFixed(2),
+            });
+
+            await updateDoc(tutorRefInTutors, {
+                Balance: newTutorBalance.toFixed(2),
+            });
+
+            // Record the payment in the 'payments' collection
+            await addDoc(collection(firestoreDB, 'payments'), {
+                payerName: `${session.student.name} ${session.student.lastName}`,
+                payerId: session.student._id,
+                recipientName: `${session.tutor.firstName} ${session.tutor.lastName}`,
+                recipientId: session.tutor._id,
+                amount: parseFloat(sessionCost).toFixed(2),
+                method: 'sessionPayment',
+                timestamp: new Date(),
+            });
+
+            // Update the session status to 'completed' to prevent repeated actions
+            const sessionRef = doc(firestoreDB, 'Bookings', session.bookingRef);
+            await updateDoc(sessionRef, {
+                status: 'completed',
+            });
+
+            // Inform the user about the tutor's updated balance and successful payment
+            Alert.alert('Success', `The session is complete! Tutor's new balance is R${newTutorBalance.toFixed(2)}. Payment of R${sessionCost} has been successfully processed.`);
+        } catch (error) {
+            console.error('Error marking session as complete and processing payment:', error);
+            Alert.alert('Error', 'Failed to mark the session as complete, please try again.');
+        }
+    };
+
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Sessions</Text>
                 <View style={styles.iconContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-                        <Ionicons name="notifications-outline" size={30} color="black" />
-                    </TouchableOpacity>
+                    <NotificationIcon navigation={navigation} />
                     <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-                        <Image
-                            source={currentUser?.imageUrl ? { uri: currentUser.imageUrl } : defaultImage}
-                            style={styles.profileImage}
-                        />
+                        {currentUser?.imageUrl ? (
+                            <Image
+                                source={{ uri: currentUser.imageUrl }}
+                                style={styles.profileImage} // Add the style for the profile image
+                            />
+                        ) : (
+                            <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
+                        )}
                     </TouchableOpacity>
+
                 </View>
             </View>
 
             <View style={styles.tabContainer}>
                 <TouchableOpacity onPress={() => setActiveTab('Scheduled')} style={[styles.tab, activeTab === 'Scheduled' && styles.activeTab]}>
                     <Text style={[styles.tabText, activeTab === 'Scheduled' && styles.activeTabText]}>Scheduled</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setActiveTab('Ongoing')} style={[styles.tab, activeTab === 'Ongoing' && styles.activeTab]}>
-                    <Text style={[styles.tabText, activeTab === 'Ongoing' && styles.activeTabText]}>Ongoing</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setActiveTab('Completed')} style={[styles.tab, activeTab === 'Completed' && styles.activeTab]}>
                     <Text style={[styles.tabText, activeTab === 'Completed' && styles.activeTabText]}>Completed</Text>
@@ -116,26 +243,23 @@ const Session = ({ navigation }) => {
             <ScrollView contentContainerStyle={[styles.contentContainer, { flexGrow: 1 }]}>
                 {activeTab === 'Scheduled' && scheduledSessions.length > 0 ? (
                     scheduledSessions.map((session) => (
-                        <BookingCard
+                        <SessionCard
                             key={session.id}
-                            booking={session}
+                            session={session}
                             role={currentUser.role}
-                        />
-                    ))
-                ) : activeTab === 'Ongoing' && ongoingSessions.length > 0 ? (
-                    ongoingSessions.map((session) => (
-                        <BookingCard
-                            key={session.id}
-                            booking={session}
-                            role={currentUser.role}
+                            onReviewPress={() => handleOpenReview(session)}
+
                         />
                     ))
                 ) : activeTab === 'Completed' && completedSessions.length > 0 ? (
                     completedSessions.map((session) => (
-                        <BookingCard
+                        <SessionCard
                             key={session.id}
-                            booking={session}
+                            session={session}
                             role={currentUser.role}
+                            onReviewPress={() => handleOpenReview(session)} // Trigger review action
+                            onMarkAsComplete={() => handleMarkAsComplete(session)}
+                            enable={enable}
                         />
                     ))
                 ) : (
@@ -145,12 +269,14 @@ const Session = ({ navigation }) => {
                 )}
             </ScrollView>
 
-            {/* Button for students only */}
-            {currentUser.role === 'Student' && (
-                <TouchableOpacity style={styles.requestButton} onPress={() => navigation.navigate('FindTutor')}>
-                    <Text style={styles.requestButtonText}>Book Another Session</Text>
-                </TouchableOpacity>
-            )}
+            <ReviewModal
+                isVisible={isReviewModalVisible}
+                tutorName={selectedSession?.tutor?.firstName + ' ' + selectedSession?.tutor?.lastName}
+                onClose={() => setReviewModalVisible(false)}
+                onSubmitReview={handleSubmitReview}
+                loading={reviewLoading}
+            />
+
         </View>
     );
 };
@@ -162,7 +288,7 @@ const styles = StyleSheet.create({
         padding: width * 0.05,
     },
     header: {
-        top: height * 0.03,
+        top:height*0.03,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -174,6 +300,9 @@ const styles = StyleSheet.create({
     },
     iconContainer: {
         flexDirection: 'row',
+    },
+    profileIcon: {
+        marginLeft: 15,
     },
     profileImage: {
         width: 30,
@@ -216,21 +345,6 @@ const styles = StyleSheet.create({
         fontSize: width * 0.045,
         color: '#23cbfb',
         textAlign: 'center',
-    },
-    requestButton: {
-        backgroundColor: '#23cbfb',
-        borderRadius: width * 0.06,
-        paddingVertical: height * 0.02,
-        paddingHorizontal: width * 0.08,
-        alignItems: 'center',
-        bottom: height * 0.07,
-        marginBottom: height * 0.02,
-        alignSelf: 'center',
-    },
-    requestButtonText: {
-        color: '#ffffff',
-        fontSize: width * 0.045,
-        fontWeight: 'bold',
     },
     loadingContainer: {
         flex: 1,
