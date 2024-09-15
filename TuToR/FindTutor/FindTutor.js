@@ -295,7 +295,7 @@ const FindTutorScreen = ({ navigation }) => {
                       />
                       <View style={styles.tutorInfo}>
                         <Text style={styles.tutorName}>
-                          {tutor.firstName} {tutor.lastName}
+                          {tutor.name} {tutor.lastName}
                         </Text>
                         <Text style={styles.tutorRating}>
                           ⭐ {tutor.rating || 'No rating yet'}
@@ -340,12 +340,16 @@ const FindTutorScreen = ({ navigation }) => {
           <Ionicons name="arrow-back-outline" size={width * 0.07} color="black" />
         </TouchableOpacity>
         <Text style={styles.headerText}>Find Tutor</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-          <Ionicons name="notifications-outline" size={width * 0.07} color="black" style={styles.notificationIcon} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
-          <Ionicons name="person-outline" size={24} color="black" style={styles.profileIcon} />
-        </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
+              {currentUser?.imageUrl ? (
+                  <Image
+                      source={{ uri: currentUser.imageUrl }}
+                      style={styles.profileImage} // Add the style for the profile image
+                  />
+              ) : (
+                  <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
+              )}
+          </TouchableOpacity>
       </View>
       <View style={styles.progressContainer}>
         <View style={[styles.progressStep, currentStep >= 0 && styles.progressStepActive]} />
@@ -401,10 +405,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+      textAlign:'center',
   },
   headerText: {
     fontSize: 24,
-    left: width * 0.09,
     fontWeight: 'bold',
   },
   iconContainer: {
@@ -413,6 +417,12 @@ const styles = StyleSheet.create({
   profileIcon: {
     marginLeft: 15,
   },
+    profileImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        marginLeft: 15,
+    },
   progressContainer: {
     top: height * 0.02,
     flexDirection: 'row',
