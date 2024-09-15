@@ -35,11 +35,13 @@ const TermsOfUseScreen = ({route, navigation }) => {
 
                 if (collectionName === 'Students' && isScrolledToEnd ) {
                     try {
-                        await signOut(firebaseAuth); // Sign out from Firebase authentication
+                        await signOut(firebaseAuth);
+                        await setDoc(doc(firestoreDB, 'Students', userId), { acceptedTerms: true }, { merge: true });
                     } catch (error) {
                         console.error('Error signing out:', error.message); // Handle any error during sign out
                     }
                 } else if (collectionName === 'Tutors' && isScrolledToEnd) {
+                    await setDoc(doc(firestoreDB, 'Tutors', userId), { acceptedTerms: true }, { merge: true });
                     navigation.navigate("ApplicationStatus")
                 }
 
