@@ -125,6 +125,7 @@ export default function TutorDetails4({ route, navigation }) {
         rate,
         role,
         createdAt: new Date(),
+        providerData: userCredential.user.providerData[0] || null,
       };
 
       // Save the user object to the 'Tutors' collection
