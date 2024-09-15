@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { firestoreDB } from "../Config/firebaseConfig";
-import { collection, setDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
+import {collection, setDoc, doc, getDoc, updateDoc, addDoc} from 'firebase/firestore';
 import { useSelector } from "react-redux";
 
 const { width, height } = Dimensions.get('window');
@@ -50,37 +50,10 @@ const TutorDetailsScreen = ({ route, navigation }) => {
     return tutor.rate * hours;
   };
 
-  const sendNotificationToTutor = async (tutorId, bookingDetails) => {
-    try {
-      const notificationRef = doc(collection(firestoreDB, 'Notifications'));
-      await setDoc(notificationRef, {
-        userId: tutorId,
-        message: `You have a new booking request from ${bookingDetails.studentName} for ${bookingDetails.course}`,
-        timestamp: new Date(),
-        bookingId: bookingDetails.bookingRef,
-        status: 'unread',
-      });
-    } catch (error) {
-      console.error('Error sending notification to tutor:', error);
-    }
-  };
 
-  const sendNotificationToStudent = async (studentId, tutorAction) => {
-    try {
-      const notificationRef = doc(collection(firestoreDB, 'Notifications'));
-      await setDoc(notificationRef, {
-        userId: studentId,
-        message: `Your booking request was ${tutorAction} by ${tutor.firstName} ${tutor.lastName}.`,
-        timestamp: new Date(),
-        status: 'unread',
-      });
-    } catch (error) {
-      console.error('Error sending notification to student:', error);
-    }
-  };
 
   const handleBooking = async (bookingDetails) => {
-    const sessionCost = calculateSessionCost();
+    const sessionCost = parseFloat(calculateSessionCost().toFixed(2)); // Ensure session cost has 2 decimal places
 
     if (studentBalance === null) {
       alert('Could not retrieve your balance. Please try again later.');
@@ -88,7 +61,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
     }
 
     if (studentBalance < sessionCost) {
-      alert(`Insufficient balance. Your balance is R${studentBalance}, but the session costs R${sessionCost}.`);
+      alert(`Insufficient balance. Your balance is R${studentBalance.toFixed(2)}, but the session costs R${sessionCost}.`);
       return;
     }
 
@@ -97,6 +70,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
 
       const bookingRef = doc(collection(firestoreDB, 'Bookings'));
 
+      // Save the booking to Firestore
       await setDoc(bookingRef, {
         tutor: bookingDetails.tutor,
         studentName: bookingDetails.studentName,
@@ -107,16 +81,42 @@ const TutorDetailsScreen = ({ route, navigation }) => {
         requestTime: bookingDetails.requestTime,
         customRequest: bookingDetails.customRequest,
         selectedMode: bookingDetails.selectedMode,
+        readByTutor:false,
+        readByStudent:false,
         status: 'pending',
         bookingRef: bookingRef.id,
         student: currentUser,
-        cost: sessionCost,
+        cost: sessionCost, // Already formatted to 2 decimal places
       });
 
-      // Send notification to the tutor
-      await sendNotificationToTutor(bookingDetails.tutor._id, bookingDetails);
+      // Update the student's balance by subtracting the session cost
+      const newStudentBalance = parseFloat((studentBalance - sessionCost).toFixed(2));
+      const studentDocRef = doc(firestoreDB, 'users', currentUser._id);
+      const studentRefInStudents = doc(firestoreDB, 'Students', currentUser._id);
 
-      alert(`Booking request sent successfully!\nBooking Reference: ${bookingRef.id}`);
+      await updateDoc(studentDocRef, {
+        Balance: newStudentBalance,
+      });
+
+      // Also update the Students collection
+      await updateDoc(studentRefInStudents, {
+        Balance: newStudentBalance,
+      });
+
+      // Record the payment in the 'payments' collection, including both student and tutor
+      await addDoc(collection(firestoreDB, 'payments'), {
+        payerName: currentUser.name,
+        payerId: currentUser._id,
+        recipientName: `${bookingDetails.tutor.name} ${bookingDetails.tutor.lastName}`,
+        amount: -sessionCost,
+        method: 'sessionPayment',
+        mobile: currentUser.phoneNumber,
+        timestamp: new Date(),
+      });
+
+
+
+      alert(`Booking request sent successfully! Your new balance is R${newStudentBalance}. \nBooking Reference: ${bookingRef.id}`);
 
       navigation.goBack();
     } catch (error) {
@@ -126,6 +126,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
       setLoading(false);
     }
   };
+
 
   return (
       <SafeAreaView style={styles.containerwider}>
@@ -143,7 +144,7 @@ const TutorDetailsScreen = ({ route, navigation }) => {
                 style={styles.tutorImage}
             />
             <Text style={styles.tutorName}>
-              {tutor.firstName} {tutor.lastName}
+              {tutor.name} {tutor.lastName}
             </Text>
             <Text style={styles.tutorRating}>⭐ {tutor.rating || 'No rating yet'}</Text>
           </View>
@@ -166,7 +167,38 @@ const TutorDetailsScreen = ({ route, navigation }) => {
             {tutor.reviews?.length > 0 ? (
                 tutor.reviews.map((review, index) => (
                     <View key={index} style={styles.reviewContainer}>
-                      <Text style={styles.reviewText}>{review}</Text>
+                      {/* Review Header */}
+                      <View style={styles.reviewHeader}>
+                        <Text style={styles.reviewerName}>
+                          {review.studentName} {review.reviewerName}
+                        </Text>
+
+                        {/* Display star ratings */}
+                        <View style={styles.ratingStars}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                              <Ionicons
+                                  key={star}
+                                  name={star <= review.rating ? 'star' : 'star-outline'}
+                                  size={16}
+                                  color="yellow"
+                              />
+                          ))}
+                        </View>
+                      </View>
+
+                      {/* Review Text */}
+                      <Text style={styles.reviewText}>
+                        {review.review}
+                      </Text>
+
+                      {/* Review Timestamp */}
+                      <Text style={styles.reviewDate}>
+                        {new Date(review.timestamp?.seconds * 1000).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </Text>
                     </View>
                 ))
             ) : (
@@ -267,6 +299,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: width * 0.045,
     fontWeight: 'bold',
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  reviewerName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  ratingStars: {
+    flexDirection: 'row',
+  },
+  reviewDate: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'right',
   },
 });
 
