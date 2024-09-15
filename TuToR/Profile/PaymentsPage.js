@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import {Ionicons, MaterialCommunityIcons} from '@expo/vector-icons'; // Import icons from Expo
+import {Ionicons, MaterialCommunityIcons} from '@expo/vector-icons';
+import {useSelector} from "react-redux"; // Import icons from Expo
 
 const { width,height } = Dimensions.get('window');
 
 const PaymentsPage = ({ navigation }) => {
-
+    const currentUser = useSelector((state) => state.user.user);
     const navigateToHistory = () => {
         navigation.navigate('TransactionHistory'); // Assuming you have a History page in your navigation
     };
@@ -29,7 +30,7 @@ const PaymentsPage = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.optionButton} onPress={navigateToLoadCredits}>
                     <MaterialCommunityIcons name="wallet-outline" size={30} color="#FFFFFF" style={styles.icon} />
-                    <Text style={styles.optionText}>Load Credits</Text>
+                    <Text style={styles.optionText}>{currentUser.role==='Student' ?'Load Credits': 'Withdraw Cash'}</Text>
                 </TouchableOpacity>
             </View>
 
