@@ -62,8 +62,6 @@ const PersonalInfo = () => {
           if (currentUser.role === 'Tutor') {
             const tutorDoc = await getDoc(doc(firestoreDB, 'Tutors', userId));
             const tutorData = tutorDoc.data();
-            setGender(tutorData?.gender || '');
-            setAddress(tutorData?.address || '');
             setCvFileUrl(tutorData?.cvFileUrl || '');
             setTranscriptFileUrl(tutorData?.transcriptFileUrl || '');
             setIdFileUrl(tutorData?.idFileUrl || '');
@@ -272,7 +270,7 @@ const PersonalInfo = () => {
             {currentUser.role === 'Tutor' && (
                 <View>
                   {/* CV Upload Button */}
-                  <TouchableOpacity onPress={() => pickDocument('cv')} style={styles.uploadButton}>
+                  <TouchableOpacity onPress={isEditing ? () => pickDocument('cv') : null} style={styles.uploadButton}>
                     <Ionicons name="document-outline" size={20} color="#fff" />
                     <Text style={styles.buttonText}>
                       {cvFileUrl ? 'CV Uploaded' : cvFileUrl ? cvFileUrl : 'Upload CV'}
@@ -280,7 +278,7 @@ const PersonalInfo = () => {
                   </TouchableOpacity>
 
                   {/* Transcript Upload Button */}
-                  <TouchableOpacity onPress={() => pickDocument('transcript')} style={styles.uploadButton}>
+                  <TouchableOpacity onPress={isEditing ? () => pickDocument('transcript') : null} style={styles.uploadButton}>
                     <Ionicons name="document-outline" size={20} color="#fff" />
                     <Text style={styles.buttonText}>
                       {transcriptFileUrl ? 'Transcript Uploaded' : transcriptFileUrl ? transcriptFileUrl : 'Upload Transcript'}
@@ -288,7 +286,7 @@ const PersonalInfo = () => {
                   </TouchableOpacity>
 
                   {/* ID Upload Button */}
-                  <TouchableOpacity onPress={() => pickDocument('id')} style={styles.uploadButton}>
+                  <TouchableOpacity onPress={isEditing ? () => pickDocument('id'): null} style={styles.uploadButton}>
                     <Ionicons name="document-outline" size={20} color="#fff" />
                     <Text style={styles.buttonText}>
                       {idFileUrl ? 'ID Uploaded' : idFileUrl ? idFileUrl: 'Upload ID'}
