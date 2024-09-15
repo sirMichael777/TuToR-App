@@ -12,7 +12,7 @@ import {
 import {useSelector} from 'react-redux';
 import {collection, doc, onSnapshot, query, updateDoc, where} from 'firebase/firestore';
 import {firestoreDB} from '../Config/firebaseConfig';
-import BookingCard from './BookingCard';
+import BookingCard from '../FindTutor/BookingCard';
 import {Ionicons} from "@expo/vector-icons"; // Assuming you created a separate component for the booking card
 
 const NotificationScreen = ({ navigation }) => {
@@ -23,7 +23,7 @@ const NotificationScreen = ({ navigation }) => {
 
     useEffect(() => {
         // Assume role is stored in the user data
-        setRole(currentUser?.role || 'student');  // Default to 'student' if role is undefined
+        setRole(currentUser?.role || 'Student');  // Default to 'student' if role is undefined
 
         const fetchBookings = async () => {
             try {
@@ -59,7 +59,7 @@ const NotificationScreen = ({ navigation }) => {
 
         try {
             // Update Firestore booking status to 'accepted'
-            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'accepted' });
+            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'accepted', readByTutor: true });
             Alert.alert('Success', 'You have accepted the booking.');
         } catch (error) {
             console.error('Error accepting booking:', error);
@@ -70,7 +70,7 @@ const NotificationScreen = ({ navigation }) => {
     const handleDecline = async (bookingRef) => {
         try {
             // Update Firestore booking status to 'declined'
-            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'declined' });
+            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'declined' ,readByTutor: true});
             Alert.alert('Success', 'You have declined the booking.');
         } catch (error) {
             console.error('Error declining booking:', error);
@@ -107,11 +107,11 @@ const NotificationScreen = ({ navigation }) => {
             <ScrollView contentContainerStyle={styles.scrollViewContainer}>
                 {bookings.map((booking) => (
                     <BookingCard
-                        key={booking.id}
+                        key={booking.bookingRef}
                         booking={booking}
                         role={role}
-                        onAccept={() => handleAccept(booking.id)}
-                        onDecline={() => handleDecline(booking.id)}
+                        onAccept={() => handleAccept(booking.bookingRef)}
+                        onDecline={() => handleDecline(booking.bookingRef)}
                         onChatPress={() => handleChat(booking)}
                     />
                 ))}
