@@ -47,11 +47,13 @@ export default function StudentDetails2({ route,navigation }) {
         lastName: lastName,
         phoneNumber: phoneNumber,
         role: role,
+        rating: 0,
+        reviews: [],
+        ratingCount: 0,
         acceptedTerms: false,
         providerData: userCredential.user.providerData[0] || null,
       };
 
-      // Save the user data in Firestore
       await setDoc(doc(firestoreDB, 'users', userCredential?.user.uid), data);
       await setDoc(doc(firestoreDB, 'Students', userCredential?.user.uid), data);
       setLoading(false);
