@@ -16,6 +16,7 @@ import {collection, getDoc, onSnapshot, orderBy, query, where, doc, deleteDoc, g
 import {firestoreDB} from "../Config/firebaseConfig";
 import MessageCard from "./MessageCard";
 import MessageListener from "./MessageListener";
+import NotificationIcon from "../Notifications/NotificationIcon";
 
 const { width, height } = Dimensions.get('window');
 
@@ -158,10 +159,7 @@ const ChatScreen = ({ navigation }) => {
             <View style={styles.header}>
                 <Text style={styles.headerText}>Chat</Text>
                 <View style={styles.iconContainer}>
-                    <View style={styles.iconContainer}>
-                        <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-                            <Ionicons name="notifications-outline" size={30} color="black" />
-                        </TouchableOpacity>
+                    <NotificationIcon navigation={navigation} />
                         <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
                             {currentUser?.imageUrl ? (
                                 <Image
@@ -172,7 +170,7 @@ const ChatScreen = ({ navigation }) => {
                                 <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
                             )}
                         </TouchableOpacity>
-                    </View>
+
                 </View>
             </View>
 
