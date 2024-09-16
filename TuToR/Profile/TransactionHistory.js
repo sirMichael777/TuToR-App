@@ -15,10 +15,10 @@ import {Ionicons} from "@expo/vector-icons";
 const {  height } = Dimensions.get('window');
 
 // TransactionCard Component
-const TransactionCard = ({ transaction }) => {
-    const { name, amount, timestamp, method } = transaction;
+const TransactionCard = ({ transaction, role }) => {
+    const { payerName, recipientName, amount, timestamp, method } = transaction;
 
-    // Convert Firestore Timestamp to a Date object, then format it to a readable string (e.g., 02:14 August 13)
+    // Convert Firestore Timestamp to a Date object, then format it to a readable string
     const formattedDate = timestamp?.seconds
         ? new Date(timestamp.seconds * 1000).toLocaleString('en-GB', {
             hour: '2-digit',
@@ -26,48 +26,106 @@ const TransactionCard = ({ transaction }) => {
             day: 'numeric',
             month: 'long',
         })
-        : 'Date not available'; // Handle case when the date doesn't exist
+        : 'Date not available';
+
+    // Define amount and label based on user role and transaction type
+    let displayAmount;
+    let transactionLabel;
+
+    if (role === 'Student') {
+        if (method === 'sessionPayment') {
+            // For students making session payments, it’s a negative value
+            displayAmount = `-R${Math.abs(amount).toFixed(2)}`;
+            transactionLabel = `To: ${recipientName}`;
+        } else if (method === 'MobilePayment' || method=== 'CreditCardPayment') {
+            // For students loading credits, it's a positive value
+            displayAmount = `+R${Math.abs(amount).toFixed(2)}`;
+            transactionLabel =`${payerName} `;
+        }
+    } else if (role === 'Tutor') {
+        if (method === 'sessionPayment') {
+            // For tutors receiving session payments, it’s a positive value
+            displayAmount = `+R${Math.abs(amount).toFixed(2)}`;
+            transactionLabel = `From: ${payerName}`;
+        } else if (method === 'withdrawal') {
+            // For tutors making withdrawals, it’s a negative value
+            displayAmount = `-R${Math.abs(amount).toFixed(2)}`;
+            transactionLabel = 'Withdrawal';
+        }
+    }
 
     return (
         <View style={styles.transactionCard}>
             <View style={styles.transactionDetails}>
-                <Text style={styles.transactionName}>{name}</Text>
+                <Text style={styles.transactionName}>{transactionLabel}</Text>
+                <Text style={styles.transactionType}>{method === 'sessionPayment' ? 'Session Payment' : method === 'MobilePayment' ||  method=== 'CreditCardPayment' ? 'Credit Load' : 'Withdrawal'}</Text>
                 <Text style={styles.transactionDate}>{formattedDate}</Text>
-                <Text style={styles.transactionType}>{method}</Text>
             </View>
             <Text
                 style={[
                     styles.transactionAmount,
-                    { color: amount > 0 ? 'green' : 'red' }, // Color based on positive or negative value
+                    { color: amount > 0 ? 'green' : 'red' }, // Red for outgoing, Green for incoming
                 ]}
             >
-                {amount > 0 ? `+R${amount.toFixed(2)}` : `-R${Math.abs(amount).toFixed(2)}`} {/* Ensure two decimal places */}
+                {displayAmount}
             </Text>
         </View>
     );
 };
 
-const TransactionHistory = ({navigation}) => {
+const TransactionHistory = ({ navigation }) => {
     const currentUser = useSelector((state) => state.user.user);
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
-
-
+    const role = currentUser.role; // Get user role (Student or Tutor)
 
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
-                // Fetching the payment history from Firestore
-                const paymentsQuery = query(
-                    collection(firestoreDB, 'payments'),
-                    where('userId', '==', currentUser._id) // Fetch transactions for the current user
-                );
-                const querySnapshot = await getDocs(paymentsQuery);
-                const fetchedTransactions = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
-                setTransactions(fetchedTransactions);
+                // Fetching the payment history based on the user's role
+                let paymentsQuery;
+
+                if (role === 'Student') {
+                    paymentsQuery = query(
+                        collection(firestoreDB, 'payments'),
+                        where('payerId', '==', currentUser._id) // Fetch transactions where the current user is the payer
+
+
+                    );
+
+                    const querySnapshot = await getDocs(paymentsQuery);
+                    const fetchedTransactions = querySnapshot.docs.map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
+                    setTransactions(fetchedTransactions);
+                } else if (role === 'Tutor') {
+
+                    const payerQuery = query(
+                        collection(firestoreDB, 'payments'),
+                        where('payerId', '==', currentUser._id)
+                    );
+                    const recipientQuery = query(
+                        collection(firestoreDB, 'payments'),
+                        where('recipientId', '==', currentUser._id)
+                    );
+
+                    // Execute both queries
+                    const [payerSnapshot, recipientSnapshot] = await Promise.all([
+                        getDocs(payerQuery),
+                        getDocs(recipientQuery),
+                    ]);
+
+                    const payments = [
+                        ...payerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                        ...recipientSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                    ];
+
+                    setTransactions(payments);
+
+                }
+
+
             } catch (error) {
                 console.error('Error fetching transaction history: ', error);
             } finally {
@@ -76,7 +134,7 @@ const TransactionHistory = ({navigation}) => {
         };
 
         fetchTransactions();
-    }, [currentUser]);
+    }, [currentUser, role]);
 
     if (loading) {
         return (
@@ -98,13 +156,12 @@ const TransactionHistory = ({navigation}) => {
             <FlatList
                 data={transactions}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <TransactionCard transaction={item} />}
+                renderItem={({ item }) => <TransactionCard transaction={item} role={role} />}
                 contentContainerStyle={styles.listContent}
             />
         </SafeAreaView>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
