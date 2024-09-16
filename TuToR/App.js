@@ -17,7 +17,7 @@ import ApplicationStatus from "./Authentication/ApplicationStatus";
 import StudentDetails1 from "./Authentication/StudentDetails1";
 import StudentDetails2 from "./Authentication/StudentDetails2";
 import TermsAndConditions from "./Authentication/TermsAndConditions";
-import NotificationScreen from "./FindTutor/Notifications";
+import NotificationScreen from "./Notifications/Notifications";
 import ProfileScreen from "./Profile/Profile";
 import PersonalInfo from './Profile/PersonalInfo';
 import Payment from "./Profile/Payment";
@@ -35,8 +35,8 @@ import TutorSearchScreen from "./Chat/TutorSearchScreen";
 import ChatScreen from "./Chat/ChatScreen";
 import PaymentsPage from "./Profile/PaymentsPage";
 import TransactionHistory from "./Profile/TransactionHistory";
-import TutorDetailsScreen from './Screens/TutorDetailsScreen';
-import SessionsScreen from './Screens/Session';
+import TutorDetailsScreen from './FindTutor/TutorDetailsScreen';
+import SessionsScreen from './Sessions/Session';
 
 
 const Stack = createStackNavigator();
@@ -75,8 +75,6 @@ export default () => {
             <Stack.Screen name="PaymentPage" component={PaymentsPage} />
             <Stack.Screen name="TransactionHistory" component={TransactionHistory} />
             <Stack.Screen name="ChatScreen" component={ChatScreen} />
-            <Stack.Screen name="SessionsScreen" component={SessionsScreen} />
-            
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="TutorMainApp" component={TutorMainApp} />
             <Stack.Screen name="TutorDetailsScreen" component={TutorDetailsScreen} />
