@@ -59,7 +59,7 @@ const NotificationScreen = ({ navigation }) => {
 
         try {
             // Update Firestore booking status to 'accepted'
-            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'accepted', readByTutor: true });
+            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'accepted', readByTutor: true, readByStudent: false });
             Alert.alert('Success', 'You have accepted the booking.');
         } catch (error) {
             console.error('Error accepting booking:', error);
@@ -70,7 +70,7 @@ const NotificationScreen = ({ navigation }) => {
     const handleDecline = async (bookingRef) => {
         try {
             // Update Firestore booking status to 'declined'
-            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'declined' ,readByTutor: true});
+            await updateDoc(doc(firestoreDB, 'Bookings', bookingRef), { status: 'declined' ,readByTutor: true , readByStudent: false});
             Alert.alert('Success', 'You have declined the booking.');
         } catch (error) {
             console.error('Error declining booking:', error);
