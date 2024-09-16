@@ -1,83 +1,99 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    TouchableOpacity,
+    Dimensions,
+    ActivityIndicator,
+    ScrollView,
+    SafeAreaView
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from "react-redux";
 import { firestoreDB } from "../Config/firebaseConfig";
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import MessageListener from "../Chat/MessageListener";
+import NotificationIcon from "../Notifications/NotificationIcon";
 
 const { width, height } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
     const currentUser = useSelector((state) => state.user.user);
-    const [upcomingSessions, setUpcomingSession] = useState([]); // Store up to two upcoming sessions
+    const [upcomingSessions, setUpcomingSessions] = useState([]);
+    const [latestReviews, setLatestReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Fetch upcoming sessions for the current user (Student) and filter to show only scheduled ones
+
+
     useEffect(() => {
+        setLoading(true);
+
         const fetchUpcomingSessions = async () => {
             try {
-                if (currentUser.role === 'Student') {
-                    const q = query(
-                        collection(firestoreDB, 'Bookings'),
-                        where('student._id', '==', currentUser._id),
-                        where('status', 'in', ['scheduled', 'accepted']),
-                        orderBy('startTime'), // Order by startTime to get the next session first
-                        limit(2) // Fetch at most 2 sessions
-                    );
+                const sessionsQuery = query(
+                    collection(firestoreDB, 'Bookings'),
+                    where('student._id', '==', currentUser._id),
+                    where('status', '==', 'accepted'),  // Adjust based on your status field
+                    orderBy('startTime', 'asc'),
+                    limit(3)  // Limit to 3 upcoming sessions
+                );
 
-                    const querySnapshot = await getDocs(q);
-                    const sessions = querySnapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data(),
-                    }));
+                const sessionDocs = await getDocs(sessionsQuery);
+                const sessionsData = sessionDocs.docs.map((doc) => ({
+                    id: doc.id,
+                    ...doc.data(),
+                }));
 
-                    if (sessions.length > 0) {
-                        console.log('Upcoming Sessions:', sessions);
-                        setUpcomingSession(sessions); // Set the sessions in state
-                    } else {
-                        console.log('No upcoming sessions found.');
-                        setUpcomingSession([]);
-                    }
-                }
+                setUpcomingSessions(sessionsData);
             } catch (error) {
-                console.error("Error fetching upcoming sessions:", error);
+                console.error('Error fetching upcoming sessions:', error);
             }
         };
 
-        fetchUpcomingSessions();
+        // Function to fetch latest reviews
+        const fetchLatestReviews = async () => {
+            try {
+                const reviewsQuery = query(
+                    collection(firestoreDB, 'Students'),
+                    where('_id', '==', currentUser._id),
+                    limit(3) // Limit to 3 latest reviews
+                );
+
+                const reviewDocs = await getDocs(reviewsQuery);
+                const reviewsData = reviewDocs.docs
+                    .map((doc) => doc.data().reviews)  // Extract the reviews array from each tutor document
+                    .flat()  // Flatten the array of arrays to a single array
+                    .slice(0, 3);  // Get the top 3 reviews
+
+                setLatestReviews(reviewsData);
+            } catch (error) {
+                console.error('Error fetching latest reviews:', error);
+            }
+        };
+
+        setLoading(false);
+        if (currentUser?._id) {
+            fetchUpcomingSessions();
+            fetchLatestReviews();
+        }
     }, [currentUser]);
 
-    // Format currency
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(amount);
-    };
-
-    // Conditionally render for students only
-    if (currentUser.role !== 'Student') {
+    if (loading) {
         return (
-            <View style={styles.container}>
-                <Text style={styles.errorMessage}>
-                    This screen is for students only. Please navigate to your dashboard.
-                </Text>
-                <TouchableOpacity
-                    style={styles.tutorButton}
-                    onPress={() => navigation.navigate('TutorDashboard')}
-                >
-                    <Text style={styles.tutorButtonText}>Go to Tutor Dashboard</Text>
-                </TouchableOpacity>
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#000" />
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <MessageListener navigation={navigation} />
+        <SafeAreaView style={styles.safeAreaContainer}>
+        <ScrollView contentContainerStyle={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerText}>Home</Text>
                 <View style={styles.iconContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
-                        <Ionicons name="notifications-outline" size={30} color="black" />
-                    </TouchableOpacity>
+                    <NotificationIcon navigation={navigation} />
                     <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')}>
                         {currentUser?.imageUrl ? (
                             <Image
@@ -90,9 +106,14 @@ const HomeScreen = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
             </View>
+            <Text style={styles.headerText}>Welcome {currentUser.name} {currentUser.lastName}</Text>
+            {/* Display user rating and rating count */}
+            <View style={styles.ratingContainer}>
+                <Text style={styles.ratingText}>⭐ {currentUser.rating || 'No rating yet'} ({currentUser.ratingCount || 0} ratings)</Text>
+            </View>
 
             <Text style={styles.balanceText}>Current Balance</Text>
-            <Text style={styles.balanceAmount}>{formatCurrency(currentUser.Balance)} ZAR</Text>
+            <Text style={styles.balanceAmount}>{currentUser.Balance} ZAR</Text>
 
             <View style={styles.findTutorSection}>
                 <Text style={styles.findTutorText}>
@@ -106,34 +127,19 @@ const HomeScreen = ({ navigation }) => {
 
             <View style={styles.sessionsSection}>
                 <View style={styles.sessionsHeader}>
-                    <Text style={styles.sessionsText}>Upcoming session</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('SessionsScreen')}>
+                    <Text style={styles.sessionsText}>Upcoming Sessions</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Sessions')}>
                         <Text style={styles.viewAllText}>view all</Text>
                     </TouchableOpacity>
                 </View>
 
                 {upcomingSessions.length > 0 ? (
-                    upcomingSessions.map((session) => (
-                        <View key={session.id} style={styles.sessionCard}>
-                            {/* Course Name */}
-                            <Text style={styles.sessionInfo}>Course: {session.course}</Text>
-
-                            {/* Date & Time */}
-                            <Text style={styles.sessionInfo}>
-                                Date: {new Date(session.startTime.seconds * 1000).toLocaleDateString()}{" "}
-                                Time: {new Date(session.startTime.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </Text>
-
-                            {/* Duration */}
-                            <Text style={styles.sessionInfo}>
-                                Duration: {((session.endTime.seconds - session.startTime.seconds) / 3600).toFixed(1)} hours
-                            </Text>
-
-                            {/* Tutor's Name */}
-                            <Text style={styles.sessionInfo}>Tutor: {session.tutor.name} {session.tutor.lastName}</Text>
-
-                            {/* Status */}
-                            <Text style={styles.sessionStatus}>Status: {session.status}</Text>
+                    upcomingSessions.map((session, index) => (
+                        <View key={index} style={styles.sessionCard}>
+                            <Text>Course: {session.course}</Text>
+                            <Text>Start: {new Date(session.startTime.seconds * 1000).toLocaleString()}</Text>
+                            <Text>End: {new Date(session.endTime.seconds * 1000).toLocaleString()}</Text>
+                            <Text>Status: {session.status}</Text>
                         </View>
                     ))
                 ) : (
@@ -142,20 +148,42 @@ const HomeScreen = ({ navigation }) => {
                         <Text style={styles.noSessionsText}>No upcoming scheduled sessions</Text>
                     </View>
                 )}
-
             </View>
-        </View>
+
+            {/* Display reviews */}
+            <View style={styles.reviewsSection}>
+                <View style={styles.reviewsHeader}>
+                    <Text style={styles.reviewsText}>Latest Reviews</Text>
+                </View>
+                {latestReviews.length > 0 ? (
+                    latestReviews.map((review, index) => (
+                        <View key={index} style={styles.reviewCard}>
+                            <Text style={styles.reviewText}>Review by {review?.reviewerName}:</Text>
+                            <Text style={styles.reviewContent}>{review?.review}</Text>
+                            <Text style={styles.reviewRating}>⭐ {review?.rating}</Text>
+                        </View>
+                    ))
+                ) : (
+                    <View style={styles.noReviewsCard}>
+                        <Text style={styles.noReviewsText}>No reviews yet</Text>
+                    </View>
+                )}
+            </View>
+        </ScrollView>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    safeAreaContainer: {
         flex: 1,
+        backgroundColor: '#fff',  // Optional: Adjust to match your design
+    },
+    container: {
         backgroundColor: '#ffffff',
         padding: width * 0.05,
     },
     header: {
-        marginTop: height * 0.04,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -168,15 +196,13 @@ const styles = StyleSheet.create({
     iconContainer: {
         flexDirection: 'row',
     },
-    profileIcon: {
-        marginLeft: 15,
-    },
     profileImage: {
         width: 30,
         height: 30,
         borderRadius: 15,
         marginLeft: 15,
     },
+
     balanceText: {
         color: '#008000',
         marginTop: height * 0.02,
@@ -221,53 +247,37 @@ const styles = StyleSheet.create({
         fontSize: width * 0.04,
     },
     sessionsSection: {
-        flex: 1,
+        marginBottom: 30,
     },
     sessionsHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: height * 0.015,
+        marginBottom: 10,
     },
     sessionsText: {
-        fontSize: width * 0.04,
+        fontSize: 18,
         fontWeight: 'bold',
     },
     viewAllText: {
-        color: 'blue',
-        fontSize: width * 0.035,
+        color: '#007BFF',
     },
     sessionCard: {
-        backgroundColor: '#007AFF',
-        padding: height * 0.015, // Reduced padding
-        borderRadius: width * 0.02, // Smaller border radius
-        marginBottom: height * 0.015, // Less margin between cards
-        alignItems: 'flex-start', // Align items to the left
-    },
-    sessionInfo: {
-        color: '#ffffff',
-        fontSize: width * 0.035, // Smaller font size
-        marginBottom: 4, // Reduced margin between lines
-    },
-    sessionStatus: {
-        color: '#ffcc00',
-        fontWeight: 'bold',
-        fontSize: width * 0.035, // Smaller font size
+        backgroundColor: '#f9f9f9',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 10,
     },
     noSessionsCard: {
-        backgroundColor: '#007AFF',
-        padding: height * 0.02,
-        borderRadius: width * 0.02,
         alignItems: 'center',
-        flexDirection: 'row',
+        padding: 20,
     },
     calendarIcon: {
-        width: width * 0.07, // Smaller calendar icon
-        height: width * 0.07,
-        marginRight: width * 0.02, // Less margin
+        width: 40,
+        height: 40,
+        marginBottom: 10,
     },
     noSessionsText: {
-        color: '#ffffff',
-        fontSize: width * 0.035, // Smaller text
+        color: '#666',
     },
     errorMessage: {
         fontSize: width * 0.05,
@@ -286,6 +296,39 @@ const styles = StyleSheet.create({
         color: '#ffffff',
         fontSize: width * 0.045,
         fontWeight: 'bold',
+    },
+    reviewsSection: {
+        marginBottom: 30,
+    },
+    reviewsHeader: {
+        marginBottom: 10,
+    },
+    reviewsText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    reviewCard: {
+        backgroundColor: '#f9f9f9',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 10,
+    },
+    reviewText: {
+        fontWeight: 'bold',
+    },
+    reviewContent: {
+        fontStyle: 'italic',
+        marginBottom: 5,
+    },
+    reviewRating: {
+        color: 'gold',
+    },
+    noReviewsCard: {
+        alignItems: 'center',
+        padding: 20,
+    },
+    noReviewsText: {
+        color: '#666',
     },
 });
 
