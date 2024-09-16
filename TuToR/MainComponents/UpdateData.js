@@ -13,9 +13,19 @@ const useUserDataListener = () => {
     useEffect(() => {
         if (currentUser) {
             const userId = currentUser._id;
+            let collectionName;
 
-            // Set up real-time listener to user's document
-            const unsubscribe = onSnapshot(doc(firestoreDB, 'users', userId), (docSnapshot) => {
+            // Determine which collection to fetch data from based on user role
+            if (currentUser.role === 'Tutor') {
+                collectionName = 'Tutors';
+            } else if (currentUser.role === 'Student') {
+                collectionName = 'Students';
+            } else {
+                collectionName = 'users';  // Default to 'users' collection if role is not Tutor/Student
+            }
+
+            // Set up real-time listener to the appropriate document
+            const unsubscribe = onSnapshot(doc(firestoreDB, collectionName, userId), (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     const updatedUserData = docSnapshot.data();
 
@@ -24,7 +34,7 @@ const useUserDataListener = () => {
                         dispatch(setUser(updatedUserData)); // Only update Redux store if the data has changed
                     }
                 } else {
-                    console.error('No such document!');
+                    console.error('No such document in', collectionName);
                 }
             });
 
