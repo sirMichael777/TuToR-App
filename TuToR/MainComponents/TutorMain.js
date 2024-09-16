@@ -1,7 +1,7 @@
 import {FontAwesome5, Ionicons} from "@expo/vector-icons";
 import TutorHomeScreen from "../Screens/TutorHomeScreen";
 import EarningsScreen from "../Screens/Earning";
-import Session from "../Screens/Session";
+import Session from "../Sessions/Session";
 import ChatScreen from "../Chat/Chat";
 import React from "react";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
