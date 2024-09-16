@@ -123,11 +123,12 @@ const Payment = ({navigation}) => {
 
       // Store transaction details (excluding sensitive information)
       await addDoc(collection(firestoreDB, 'payments'), {
-        name: currentUser.name,
-        userId: currentUser._id,
+        payerName: currentUser.name,
+        payerId: currentUser._id,
         amount: parseFloat(amount),
         method: selectedMethod,
         mobile: mobile,
+        isPayment:false,
         timestamp: new Date(),
       });
 
@@ -146,6 +147,76 @@ const Payment = ({navigation}) => {
       Alert.alert('Error', 'Failed to process payment. Please try again.');
     }
   };
+
+  const handleWithdrawal = async () => {
+    if (!amount || !validateAmount(amount)) {
+      Alert.alert('Error', 'Please enter a valid amount.');
+      return;
+    }
+
+    if (parseFloat(amount) > balance) {
+      Alert.alert('Error', `You cannot withdraw more than your available balance (R${balance}).`);
+      return;
+    }
+
+    if (selectedMethod === 'CreditCardPayment') {
+      if (!cardNumber || !validateCardNumber(cardNumber)) {
+        Alert.alert('Error', 'Please enter a valid card number.');
+        return;
+      }
+
+      if (!expiryDate || !validateExpiryDate(expiryDate)) {
+        Alert.alert('Error', 'Please enter a valid expiry date (MM/YY).');
+        return;
+      }
+
+      if (!cvv || !validateCVV(cvv)) {
+        Alert.alert('Error', 'Please enter a valid CVV.');
+        return;
+      }
+    } else if (selectedMethod === 'MobilePayment') {
+      if (!mobile) {
+        Alert.alert('Error', 'Please enter your mobile number.');
+        return;
+      }
+    }
+
+    try {
+      // Process the withdrawal
+      setLoading(true);
+
+      // Deduct the balance for the withdrawal
+      const newBalance = balance - parseFloat(amount);
+      await updateDoc(doc(firestoreDB, 'users', currentUser._id), {
+        Balance: newBalance,
+      });
+      await updateDoc(doc(firestoreDB, 'Tutors', currentUser._id), {
+        Balance: newBalance,
+      });
+
+      // Log the withdrawal in the 'payments' collection
+      await addDoc(collection(firestoreDB, 'payments'), {
+        payerName: currentUser.name,
+        payerId: currentUser._id,
+        amount: -parseFloat(amount),
+        method: 'withdrawal', // Treat it as a withdrawal method
+        mobile: mobile,
+        isPayment: false, // Indicating this is a withdrawal (not a payment)
+        timestamp: new Date(),
+      });
+
+      Alert.alert('Success', `You have successfully withdrawn R${amount}. Your new balance is R${newBalance}.`);
+
+      // Reset fields
+      setAmount('');
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.error('Error processing withdrawal:', error);
+      Alert.alert('Error', 'Failed to process withdrawal. Please try again.');
+    }
+  };
+
 
 
   return (
@@ -231,10 +302,10 @@ const Payment = ({navigation}) => {
         )}
 
         <TouchableOpacity style={styles.paymentButton}
-                          onPress={handlePayment}
+                          onPress={currentUser.role === 'Tutor' ? handleWithdrawal : handlePayment}
                           disabled={loading}
         >
-          <Text style={styles.paymentButtonText}>{loading? "loading Payment":"Proceed to Payment"}</Text>
+          <Text style={styles.paymentButtonText}>{loading ? "Processing..." : (currentUser.role === 'Tutor' ? "Withdraw" : "Proceed to Payment")}</Text>
         </TouchableOpacity>
       </ScrollView>
 </KeyboardAvoidingView>
