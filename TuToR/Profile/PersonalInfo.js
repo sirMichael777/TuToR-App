@@ -144,7 +144,7 @@ const PersonalInfo = () => {
   };
 
 
-  const handlePickImage = async () => {
+  const handlePickImage = async (fileType) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -154,20 +154,11 @@ const PersonalInfo = () => {
 
     if (!result.canceled) {
       setUploadingImage(true);
-      try {
-        const response = await fetch(result.assets[0].uri);
-        const blob = await response.blob();
-        const storageRef = ref(firebaseStorage, `profile_pictures/${userId}`);
-        await uploadBytes(storageRef, blob);
-        const url = await getDownloadURL(storageRef);
-        setProfilePictureUrl(url);
-      } catch (error) {
-        console.error('Error uploading image:', error.message || error);
-        Alert.alert('Error', 'Failed to upload profile picture.');
-      } finally {
-        setUploadingImage(false);
-      }
+      const url = await uploadFileToStorage(result.assets[0].uri, fileType);
+      setProfilePictureUrl(url);
+      setUploadingImage(false);
     }
+    console.log(result);
   };
 
   const uploadFileToStorage = async (uri, file) => {
@@ -225,7 +216,7 @@ const PersonalInfo = () => {
             <Text style={styles.headerText}>Update Personal Information</Text>
 
             {/* Profile Picture Section */}
-            <TouchableOpacity onPress={isEditing ? handlePickImage : null} style={styles.profilePictureContainer}>
+            <TouchableOpacity onPress={isEditing ? () => handlePickImage('profile') : null} style={styles.profilePictureContainer}>
               {profilePictureUrl ? (
                   <Image source={{ uri: profilePictureUrl }} style={styles.profilePicture} />
               ) : (
