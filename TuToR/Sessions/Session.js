@@ -15,7 +15,7 @@ import {collection, query, where, getDocs, arrayUnion, updateDoc, doc, getDoc, a
 import { firestoreDB } from '../Config/firebaseConfig';
 import { useSelector } from 'react-redux';
 import BookingCard from '../FindTutor/BookingCard';
-import SessionCard from "../FindTutor/SessionCard";
+import SessionCard from "./SessionCard";
 import ReviewModal from "../FindTutor/ReviewModal";
 import NotificationIcon from "../Notifications/NotificationIcon";  // Assuming you are using BookingCard component
 
@@ -35,61 +35,66 @@ const Session = ({ navigation }) => {
     const [selectedSession, setSelectedSession] = useState(null);
 
     useEffect(() => {
-        const fetchSessions = async () => {
-            if (!currentUser) return;
-
-            const now = new Date(); // Get current date and time
-
-            try {
-                let sessionsQuery;
-
-                // Adjust query based on role
-                if (currentUser.role === 'Student') {
-                    // Fetch sessions where the student ID matches the current user
-                    sessionsQuery = query(
-                        collection(firestoreDB, 'Bookings'),
-                        where('student._id', '==', currentUser._id)
-                    );
-                } else if (currentUser.role === 'Tutor') {
-                    // Fetch sessions where the tutor ID matches the current user
-                    sessionsQuery = query(
-                        collection(firestoreDB, 'Bookings'),
-                        where('tutor._id', '==', currentUser._id)
-                    );
-                }
-
-                const sessionsSnapshot = await getDocs(sessionsQuery);
-                const allSessions = sessionsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-
-                // Categorize sessions into Scheduled, Ongoing, and Completed based on current time
-                const scheduled = [];
-
-                const completed = [];
-
-                allSessions.forEach((session) => {
-
-                    const startTime = session.startTime.toDate();
-                    const endTime = session.endTime.toDate();
-
-                    if (endTime < now && session.status === 'accepted' ||  session.status === 'completed') {
-                        setEnable(true);
-                        completed.push(session);
-                    } else {
-                        scheduled.push(session);
-                    }
-                });
-
-                setScheduledSessions(scheduled);
-                setCompletedSessions(completed);
-                setLoading(false);
-            } catch (error) {
-                console.error('Error fetching sessions:', error);
-                setLoading(false);
-            }
-        };
 
         fetchSessions();
     }, [currentUser]);
+
+
+
+    const fetchSessions = async () => {
+        if (!currentUser) return;
+
+        const now = new Date(); // Get current date and time
+
+        try {
+            let sessionsQuery;
+
+            // Adjust query based on role
+            if (currentUser.role === 'Student') {
+                // Fetch sessions where the student ID matches the current user
+                sessionsQuery = query(
+                    collection(firestoreDB, 'Bookings'),
+                    where('student._id', '==', currentUser._id),
+                    where ('status','!=', 'pending')
+                );
+            } else if (currentUser.role === 'Tutor') {
+
+                sessionsQuery = query(
+                    collection(firestoreDB, 'Bookings'),
+                    where('tutor._id', '==', currentUser._id),
+                    where ('status','!=', 'pending')
+                );
+            }
+
+            const sessionsSnapshot = await getDocs(sessionsQuery);
+            const allSessions = sessionsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+            // Categorize sessions into Scheduled, Ongoing, and Completed based on current time
+            const scheduled = [];
+
+            const completed = [];
+
+            allSessions.forEach((session) => {
+
+                const startTime = session.startTime.toDate();
+                const endTime = session.endTime.toDate();
+
+                if (endTime < now && session.status === 'accepted' ||  session.status === 'completed') {
+                    setEnable(true);
+                    completed.push(session);
+                } else {
+                    scheduled.push(session);
+                }
+            });
+
+            setScheduledSessions(scheduled);
+            setCompletedSessions(completed);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching sessions:', error);
+            setLoading(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -98,7 +103,6 @@ const Session = ({ navigation }) => {
             </View>
         );
     }
-
     const handleOpenReview = (session) => {
         setSelectedSession(session);  // Set the session that will be reviewed
         setReviewModalVisible(true);

@@ -35,15 +35,14 @@ const SessionCard = ({ session, role, onReviewPress, onMarkAsComplete, enable })
 
             <View style={styles.buttonContainer}>
                 {/* Show Review button if the session is completed and the role is Student */}
-                {enable && (
+                {(
                     <TouchableOpacity style={styles.reviewButton} onPress={onReviewPress}>
                         <Text style={styles.reviewButtonText}>Write A Review</Text>
                     </TouchableOpacity>
-
                 )
                 }
 
-                {role === 'Tutor' && enable && status !=='completed' && (
+                {role === 'Tutor' && status !=='completed' && (
                     <TouchableOpacity style={styles.completeButton} onPress={onMarkAsComplete}>
                         <Text style={styles.completeButtonText}>Mark as Complete</Text>
                     </TouchableOpacity>
