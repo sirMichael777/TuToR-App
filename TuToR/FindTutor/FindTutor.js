@@ -35,6 +35,7 @@ const FindTutorScreen = ({ navigation }) => {
         return;
       }
 
+      setCurrentStep(0);
       // Navigate to TutorDetailsScreen and pass the booking details in raw form
       navigation.navigate('TutorDetailsScreen', {
         tutor,
@@ -206,13 +207,13 @@ const FindTutorScreen = ({ navigation }) => {
 
                     const endDateTime = new Date(date);
                     endDateTime.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
-
+                    setEndTime(selectedTime);
                     // Check if the selected end time is at least 1 hour after the start time
-                    if (endDateTime - startDateTime < oneHourInMillis) {
-                      alert("End time must be at least 1 hour after the start time.");
-                    } else {
-                      setEndTime(selectedTime);
-                    }
+                    // if (endDateTime - startDateTime < oneHourInMillis) {
+                    //   alert("End time must be at least 1 hour after the start time.");
+                    // } else {
+                    //   setEndTime(selectedTime);
+                    // }
                   }
                 }}
               />
