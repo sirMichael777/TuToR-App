@@ -1,58 +1,135 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ActivityIndicator, Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
-const SessionCard = ({ session, role, onReviewPress, onMarkAsComplete, enable }) => {
-    const { bookingRef, student, tutor, startTime, endTime, status, } = session;
-    console.log(status);
+// Utility function to format Firestore timestamp to a readable date string
+const formatFirestoreDate = (timestamp) => {
+    return timestamp?.seconds
+        ? new Date(timestamp.seconds * 1000).toLocaleString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: 'numeric',
+            month: 'long',
+        })
+        : 'Date not available';
+};
 
-    // Format timestamps to readable date strings
-    const formatFirestoreDate = (timestamp) => {
-        return timestamp?.seconds
-            ? new Date(timestamp.seconds * 1000).toLocaleString('en-GB', {
-                hour: '2-digit',
-                minute: '2-digit',
-                day: 'numeric',
-                month: 'long',
-            })
-            : 'Date not available';
+const SessionCard = ({ session, role, onReviewPress, onMarkAsComplete, enable, sessionHasEnded, reviewSubmitted }) => {
+    const { bookingRef, student, tutor, studentAck, tutorAck, status, reviewedBy } = session;
+
+
+    const [loading, setLoading] = useState(false);  // Track loading state
+
+    // Determine if user is a Student or Tutor and their acknowledgment status
+    const isStudent = role === 'Student';
+    const userAck = isStudent ? studentAck : tutorAck;
+
+    // Centralized condition checks
+    const canSubmitReview = sessionHasEnded && !reviewedBy.includes(isStudent ? student._id : tutor._id);
+
+    const canTakeAction = reviewedBy.includes(isStudent ? student._id : tutor._id);
+
+
+    // Conditionally render status messages and hide buttons after action
+    const renderActionStatus = () => {
+
+        if (isStudent) {
+            if (studentAck) {
+                return <Text style={styles.completeText}>Complete</Text>;
+            } else if (status === 'didntHappen') {
+                return <Text style={styles.didntHappenText}>Session didn't happen</Text>;
+            }
+        } else {
+            if (tutorAck && studentAck) {
+                return <Text style={styles.completeText}>Payment released</Text>;
+            } else if (tutorAck && !studentAck) {
+                return <Text style={styles.awaitingText}>Awaiting student acknowledgment before releasing payment</Text>;
+            } else if (studentAck && status === 'didntHappen') {
+                return (
+                    <Text style={styles.conflictingText}>
+                        Student has a contradicting remark. Please report to support@example.com.
+                    </Text>
+                );
+            }
+        }
+        return null;
+    };
+
+    const handleReviewSubmit = () => {
+        onReviewPress();  // Trigger the review modal
+    };
+
+    const handleAction = async (action) => {
+        try {
+            setLoading(true);  // Set loading to true when the action starts
+            await onMarkAsComplete(action);
+;
+
+        } catch (error) {
+            // Show an alert for error handling
+            Alert.alert('Action Failed', 'There was a problem submitting your action. Please try again later.');
+        } finally {
+            setLoading(false);  // Stop loading once the action is completed or fails
+        }
     };
 
     return (
-        <View style={styles.cardContainer}>
+        <View style={styles.cardContainer} accessible={true} accessibilityLabel={`Session card for ${isStudent ? tutor.name : student.name}`}>
             <Text style={styles.bookingRef}>BookingRef: {bookingRef}</Text>
 
             {/* Conditionally show either student or tutor name based on the user role */}
-            {role === 'Student' ? (
-                <Text style={styles.participantName}>TutorName: {tutor.name} {tutor.lastName}</Text>
+            {isStudent ? (
+                <Text style={styles.participantName} accessibilityLabel={`Tutor: ${tutor.name} ${tutor.lastName}`}>Tutor: {tutor.name} {tutor.lastName}</Text>
             ) : (
-                <Text style={styles.participantName}>StudentName: {student.name} {student.lastName}</Text>
+                <Text style={styles.participantName} accessibilityLabel={`Student: ${student.name} ${student.lastName}`}>Student: {student.name} {student.lastName}</Text>
             )}
 
-            <Text style={styles.sessionTime}>Start-Time: {formatFirestoreDate(startTime)}</Text>
-            <Text style={styles.sessionTime}>Finish-Time: {formatFirestoreDate(endTime)}</Text>
+            {/* Session time */}
+            <Text style={styles.sessionTime} accessibilityLabel={`Start time: ${formatFirestoreDate(session.startTime)}`}>Start-Time: {formatFirestoreDate(session.startTime)}</Text>
+            <Text style={styles.sessionTime} accessibilityLabel={`End time: ${formatFirestoreDate(session.endTime)}`}>Finish-Time: {formatFirestoreDate(session.endTime)}</Text>
 
             <View style={styles.buttonContainer}>
-                {/* Show Review button if the session is completed and the role is Student */}
-                {(
-                    <TouchableOpacity style={styles.reviewButton} onPress={onReviewPress}>
+                {/* Conditionally show Write a Review button only if the session has ended and the user hasn't submitted a review */}
+                {canSubmitReview && (
+                    <TouchableOpacity
+                        style={styles.reviewButton}
+                        onPress={handleReviewSubmit}
+                        accessibilityLabel="Write a review button"
+                    >
                         <Text style={styles.reviewButtonText}>Write A Review</Text>
                     </TouchableOpacity>
-                )
-                }
+                )}
 
-                {role === 'Tutor' && status !=='completed' && (
-                    <TouchableOpacity style={styles.completeButton} onPress={onMarkAsComplete}>
-                        <Text style={styles.completeButtonText}>Mark as Complete</Text>
-                    </TouchableOpacity>
+                {/* Show both "Mark as Complete" and "Didn't Happen" buttons only after review is submitted */}
+                {canTakeAction && !userAck ? (
+                    <View style={styles.buttonGroup}>
+                        <TouchableOpacity
+                            style={styles.completeButton}  // Change opacity if disabled
+                            onPress={() => handleAction('complete')}  // Pass 'complete' as action
+                            accessibilityLabel="Mark as complete button"
+                        >
+                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.completeButtonText}>Mark as Complete</Text>}
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.didntHappenButton}  // Change opacity if disabled
+                            onPress={() => handleAction('didntHappen')}  // Pass 'didntHappen' as action
+                            disabled={!enable || loading}  // Disable button when 'enable' is false or loading
+                            accessibilityLabel="Didn't happen button"
+                        >
+                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.didntHappenButtonText}>Didn't Happen</Text>}
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    renderActionStatus()
                 )}
             </View>
         </View>
     );
 };
 
-// Sample Styles for the buttons
+// Styles for the buttons and layout
 const styles = StyleSheet.create({
     cardContainer: {
         padding: 16,
@@ -97,6 +174,37 @@ const styles = StyleSheet.create({
     },
     completeButtonText: {
         color: '#fff',
+        fontWeight: 'bold',
+    },
+    buttonGroup: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    didntHappenButton: {
+        backgroundColor: '#ff4d4d',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginLeft: 10,  // Adds spacing between buttons
+    },
+    didntHappenButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    completeText: {
+        color: 'green',
+        fontWeight: 'bold',
+    },
+    didntHappenText: {
+        color: 'red',
+        fontWeight: 'bold',
+    },
+    awaitingText: {
+        color: '#ffa500',
+        fontWeight: 'bold',
+    },
+    conflictingText: {
+        color: 'red',
         fontWeight: 'bold',
     },
 });
