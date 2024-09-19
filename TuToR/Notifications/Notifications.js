@@ -40,6 +40,10 @@ const NotificationScreen = ({ navigation }) => {
                         id: doc.id,
                         ...doc.data(),
                     }));
+
+                    // Sort bookings by startTime in descending order (latest booking at the top)
+                    fetchedBookings.sort((a, b) => b.startTime.toDate() - a.startTime.toDate());
+
                     setBookings(fetchedBookings);
                     setLoading(false);
                 }); // Clean up the listener on component unmount
@@ -49,11 +53,11 @@ const NotificationScreen = ({ navigation }) => {
             }
         };
 
-
         if (currentUser) {
             fetchBookings();
         }
     }, [currentUser, role]);
+
 
     const handleAccept = async (bookingRef) => {
 
