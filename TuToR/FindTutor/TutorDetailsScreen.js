@@ -84,9 +84,12 @@ const TutorDetailsScreen = ({ route, navigation }) => {
         readByTutor:false,
         readByStudent:false,
         status: 'pending',
+        reviewedBy : [],
         bookingRef: bookingRef.id,
         student: currentUser,
-        cost: sessionCost, // Already formatted to 2 decimal places
+        cost: sessionCost,
+        studentAck: false,
+        tutorAck: false,
       });
 
       // Update the student's balance by subtracting the session cost
