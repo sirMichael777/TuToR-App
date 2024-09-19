@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from "react-redux";
 import { firestoreDB } from "../Config/firebaseConfig";
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import {collection, query, where, orderBy, limit, onSnapshot, doc} from 'firebase/firestore';
 import NotificationIcon from "../Notifications/NotificationIcon";
 
 const { width, height } = Dimensions.get('window');
@@ -27,57 +27,76 @@ const HomeScreen = ({ navigation }) => {
 
 
     useEffect(() => {
+        let unsubscribeUpcomingSessions;
+        let unsubscribeLatestReviews;
         setLoading(true);
 
+        const now = new Date();
+
+        // Fetch upcoming sessions using real-time updates
         const fetchUpcomingSessions = async () => {
             try {
                 const sessionsQuery = query(
                     collection(firestoreDB, 'Bookings'),
                     where('student._id', '==', currentUser._id),
                     where('status', '==', 'accepted'),  // Adjust based on your status field
-                    orderBy('startTime', 'asc'),
+                    where('endTime', '>=', now),  // Ensure the session hasn't ended
+                    orderBy('endTime', 'asc'),
                     limit(3)  // Limit to 3 upcoming sessions
                 );
 
-                const sessionDocs = await getDocs(sessionsQuery);
-                const sessionsData = sessionDocs.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
+                // Listen to real-time updates
+                unsubscribeUpcomingSessions = onSnapshot(sessionsQuery, (snapshot) => {
+                    const sessionsData = snapshot.docs.map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
 
-                setUpcomingSessions(sessionsData);
+                    setUpcomingSessions(sessionsData);
+                    setLoading(false);
+                });
             } catch (error) {
                 console.error('Error fetching upcoming sessions:', error);
+                setLoading(false);
             }
         };
 
-        // Function to fetch latest reviews
+        // Fetch latest reviews using real-time updates and order by review timestamp
         const fetchLatestReviews = async () => {
             try {
-                const reviewsQuery = query(
-                    collection(firestoreDB, 'Students'),
-                    where('_id', '==', currentUser._id),
-                    limit(3) // Limit to 3 latest reviews
-                );
+                const studentDocRef = doc(firestoreDB, 'Students', currentUser._id);
 
-                const reviewDocs = await getDocs(reviewsQuery);
-                const reviewsData = reviewDocs.docs
-                    .map((doc) => doc.data().reviews)  // Extract the reviews array from each tutor document
-                    .flat()  // Flatten the array of arrays to a single array
-                    .slice(0, 3);  // Get the top 3 reviews
+                // Listen to real-time updates for the student's document
+                unsubscribeLatestReviews = onSnapshot(studentDocRef, (docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                        const studentData = docSnapshot.data();
+                        const reviewsArray = studentData.reviews || [];
 
-                setLatestReviews(reviewsData);
+                        // Sort reviews by timestamp in descending order and get the most recent 3
+                        const sortedReviews = reviewsArray
+                            .sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate())  // Assuming 'timestamp' is a Firestore Timestamp
+                            .slice(0, 3);  // Get the top 3 reviews
+                        setLoading(false);
+                        setLatestReviews(sortedReviews);
+                    }
+                });
             } catch (error) {
+                setLoading(false);
                 console.error('Error fetching latest reviews:', error);
             }
         };
 
-        setLoading(false);
         if (currentUser?._id) {
             fetchUpcomingSessions();
             fetchLatestReviews();
         }
-    }, [currentUser]);
+
+        // Clean up the snapshot listeners when the component unmounts
+        return () => {
+            if (unsubscribeUpcomingSessions) unsubscribeUpcomingSessions();
+            if (unsubscribeLatestReviews) unsubscribeLatestReviews();
+        };
+    }, [currentUser]);  // The effect depends on currentUser
 
     if (loading) {
         return (
