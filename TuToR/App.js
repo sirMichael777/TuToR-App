@@ -36,7 +36,7 @@ import ChatScreen from "./Chat/ChatScreen";
 import PaymentsPage from "./Profile/PaymentsPage";
 import TransactionHistory from "./Profile/TransactionHistory";
 import TutorDetailsScreen from './FindTutor/TutorDetailsScreen';
-import SessionsScreen from './Sessions/Session';
+import SessionsScreen from "./Sessions/Session";
 
 
 const Stack = createStackNavigator();
@@ -78,6 +78,7 @@ export default () => {
             <Stack.Screen name="MainApp" component={MainApp} />
             <Stack.Screen name="TutorMainApp" component={TutorMainApp} />
             <Stack.Screen name="TutorDetailsScreen" component={TutorDetailsScreen} />
+            <Stack.Screen name="SessionsScreen" component={SessionsScreen} />
           </Stack.Navigator>
           <StatusBar style="auto" />
           </Provider>

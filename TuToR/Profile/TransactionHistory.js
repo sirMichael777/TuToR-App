@@ -34,16 +34,17 @@ const TransactionCard = ({ transaction, role }) => {
 
     if (role === 'Student') {
         if (method === 'sessionPayment') {
-            // For students making session payments, it’s a negative value
             displayAmount = `-R${Math.abs(amount).toFixed(2)}`;
             transactionLabel = `To: ${recipientName}`;
+
         } else if (method === 'MobilePayment' || method=== 'CreditCardPayment') {
             // For students loading credits, it's a positive value
             displayAmount = `+R${Math.abs(amount).toFixed(2)}`;
             transactionLabel =`${payerName} `;
         }
     } else if (role === 'Tutor') {
-        if (method === 'sessionPayment') {
+
+        if (method === 'earnings') {
             // For tutors receiving session payments, it’s a positive value
             displayAmount = `+R${Math.abs(amount).toFixed(2)}`;
             transactionLabel = `From: ${payerName}`;
@@ -52,13 +53,14 @@ const TransactionCard = ({ transaction, role }) => {
             displayAmount = `-R${Math.abs(amount).toFixed(2)}`;
             transactionLabel = 'Withdrawal';
         }
+
     }
 
     return (
         <View style={styles.transactionCard}>
             <View style={styles.transactionDetails}>
                 <Text style={styles.transactionName}>{transactionLabel}</Text>
-                <Text style={styles.transactionType}>{method === 'sessionPayment' ? 'Session Payment' : method === 'MobilePayment' ||  method=== 'CreditCardPayment' ? 'Credit Load' : 'Withdrawal'}</Text>
+                <Text style={styles.transactionType}>{method}</Text>
                 <Text style={styles.transactionDate}>{formattedDate}</Text>
             </View>
             <Text
@@ -82,15 +84,17 @@ const TransactionHistory = ({ navigation }) => {
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
+                setLoading(true); // Start loading state
+
                 // Fetching the payment history based on the user's role
                 let paymentsQuery;
 
                 if (role === 'Student') {
+
                     paymentsQuery = query(
                         collection(firestoreDB, 'payments'),
-                        where('payerId', '==', currentUser._id) // Fetch transactions where the current user is the payer
-
-
+                        where('payerId', '==', currentUser._id),
+                        where('method', 'in',['sessionPayment',''])
                     );
 
                     const querySnapshot = await getDocs(paymentsQuery);
@@ -98,7 +102,12 @@ const TransactionHistory = ({ navigation }) => {
                         id: doc.id,
                         ...doc.data(),
                     }));
-                    setTransactions(fetchedTransactions);
+
+                    // Sort transactions by timestamp (most recent at the top)
+                    const sortedTransactions = fetchedTransactions.sort(
+                        (a, b) => b.timestamp.toDate() - a.timestamp.toDate()  // Assuming 'timestamp' is a Firestore Timestamp
+                    );
+                    setTransactions(sortedTransactions);
                 } else if (role === 'Tutor') {
 
                     const payerQuery = query(
@@ -110,7 +119,6 @@ const TransactionHistory = ({ navigation }) => {
                         where('recipientId', '==', currentUser._id)
                     );
 
-                    // Execute both queries
                     const [payerSnapshot, recipientSnapshot] = await Promise.all([
                         getDocs(payerQuery),
                         getDocs(recipientQuery),
@@ -118,23 +126,28 @@ const TransactionHistory = ({ navigation }) => {
 
                     const payments = [
                         ...payerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
-                        ...recipientSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                        ...recipientSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
                     ];
 
-                    setTransactions(payments);
+                    // Sort payments by timestamp (most recent at the top)
+                    const sortedPayments = payments.sort(
+                        (a, b) => b.timestamp.toDate() - a.timestamp.toDate()  // Assuming 'timestamp' is a Firestore Timestamp
+                    );
 
+                    setTransactions(sortedPayments);
                 }
 
-
             } catch (error) {
+                setLoading(false);
                 console.error('Error fetching transaction history: ', error);
             } finally {
-                setLoading(false);
+                setLoading(false); // End loading state
             }
         };
 
         fetchTransactions();
     }, [currentUser, role]);
+
 
     if (loading) {
         return (
