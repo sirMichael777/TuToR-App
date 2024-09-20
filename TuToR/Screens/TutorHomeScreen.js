@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, SafeAreaView,Image} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { firestoreDB } from '../Config/firebaseConfig'; // Replace with your Firebase config
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import {collection, query, where, orderBy, limit, getDocs, onSnapshot, doc} from 'firebase/firestore';
 import { useSelector } from 'react-redux';
 import MessageListener from "../Chat/MessageListener";
 import NotificationIcon from "../Notifications/NotificationIcon";
@@ -13,56 +13,80 @@ const TutorHomeScreen = ({ navigation }) => {
     const currentUser = useSelector((state) => state.user.user); // Get current user from Redux
     const [upcomingSessions, setUpcomingSessions] = useState([]);
     const [reviews, setReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [showAllReviews, setShowAllReviews] = useState(false);
+
 
     useEffect(() => {
-        // Fetch upcoming sessions (limit 3)
+        let unsubscribeUpcomingSessions;
+        let unsubscribeLatestReviews;
+        setLoading(true);
+
+        const now = new Date();
+
+        // Fetch upcoming sessions using real-time updates
         const fetchUpcomingSessions = async () => {
             try {
                 const sessionsQuery = query(
                     collection(firestoreDB, 'Bookings'),
                     where('tutor._id', '==', currentUser._id),
                     where('status', '==', 'accepted'),  // Adjust based on your status field
-                    orderBy('startTime', 'asc'),
-                    limit(3)  // Limit to 3 upcoming sessions
+                    where('endTime', '>=', now),  // Ensure the session hasn't ended
+                    orderBy('endTime', 'asc'),
+                    limit(3)
                 );
 
-                const sessionDocs = await getDocs(sessionsQuery);
-                const sessionsData = sessionDocs.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data(),
-                }));
+                // Listen to real-time updates
+                unsubscribeUpcomingSessions = onSnapshot(sessionsQuery, (snapshot) => {
+                    const sessionsData = snapshot.docs.map((doc) => ({
+                        id: doc.id,
+                        ...doc.data(),
+                    }));
 
-                setUpcomingSessions(sessionsData);
+                    setUpcomingSessions(sessionsData);
+                    setLoading(false);
+                });
             } catch (error) {
                 console.error('Error fetching upcoming sessions:', error);
+                setLoading(false);
             }
         };
-        // Fetch latest reviews (limit 3)
-        const fetchReviews = async () => {
+
+        // Fetch latest reviews using real-time updates and order by review timestamp
+        const fetchLatestReviews = async () => {
             try {
-                const reviewsQuery = query(
-                    collection(firestoreDB, 'Tutors'),
-                    where('_id', '==', currentUser._id),
-                    limit(3) // Limit to 3 latest reviews
-                );
+                const tutorDocRef = doc(firestoreDB, 'Tutors', currentUser._id);
 
-                const reviewDocs = await getDocs(reviewsQuery);
-                const reviewsData = reviewDocs.docs
-                    .map((doc) => doc.data().reviews)  // Extract the reviews array from each tutor document
-                    .flat()  // Flatten the array of arrays to a single array
-                    .slice(0, 3);  // Get the top 3 reviews
+                // Listen to real-time updates for the student's document
+                unsubscribeLatestReviews = onSnapshot(tutorDocRef, (docSnapshot) => {
+                    if (docSnapshot.exists()) {
+                        const tutorData = docSnapshot.data();
+                        const reviewsArray = tutorData.reviews || [];
 
-                setReviews(reviewsData);
+                        // Sort reviews by timestamp in descending order and get the most recent 3
+                        const sortedReviews = reviewsArray
+                            .sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate())  // Assuming 'timestamp' is a Firestore Timestamp
+                        setLoading(false);
+                        setReviews(sortedReviews);
+                    }
+                });
             } catch (error) {
+                setLoading(false);
                 console.error('Error fetching latest reviews:', error);
             }
         };
 
         if (currentUser?._id) {
             fetchUpcomingSessions();
-            fetchReviews();
+            fetchLatestReviews();
         }
-    }, [currentUser]);
+
+        // Clean up the snapshot listeners when the component unmounts
+        return () => {
+            if (unsubscribeUpcomingSessions) unsubscribeUpcomingSessions();
+            if (unsubscribeLatestReviews) unsubscribeLatestReviews();
+        };
+    }, [currentUser]);  // The effect depends on currentUser
 
     return (
         <View style={styles.container}>
@@ -85,23 +109,28 @@ const TutorHomeScreen = ({ navigation }) => {
             </View>
 
             {/* Display tutor rating and rating count */}
-            <View style={styles.ratingContainer}>
-                <Text style={styles.ratingText}>
-                    ⭐ {currentUser.rating || 'No rating yet'} ({currentUser.ratingCount || 0} ratings)
-                </Text>
-            </View>
+
 
             <ScrollView style={styles.content}>
                 <View style={styles.card}>
-                    <Text style={styles.cardTitle}>Welcome to Your Tutoring Hub!</Text>
+                    <Text style={styles.cardTitle}>
+                        Welcome {currentUser.name} {currentUser.lastName} to your Tutoring Hub!
+                    </Text>
+
+                    <Text style={styles.ratingText}>
+                        ⭐ {currentUser.rating || 'No rating yet'} ({currentUser.ratingCount || 0} ratings)
+                    </Text>
+
                     <Text style={styles.cardText}>
                         Empower minds and shape futures. Manage your schedule and track your progress as you guide students to success.
                     </Text>
+
                 </View>
+
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Upcoming Sessions</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('SessionsScreen')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Sessions')}>
                         <Text style={styles.viewAll}>view all</Text>
                     </TouchableOpacity>
                 </View>
@@ -126,9 +155,8 @@ const TutorHomeScreen = ({ navigation }) => {
                     <Text style={styles.sectionTitle}>Latest Reviews</Text>
                 </View>
 
-                {/* Display latest reviews */}
                 {reviews.length > 0 ? (
-                    reviews.map((review, index) => (
+                    (showAllReviews ? reviews : reviews.slice(0, 3)).map((review, index) => (
                         <View key={index} style={styles.card}>
                             <Text style={styles.cardText}>Review by {review.reviewerName}</Text>
                             <Text style={styles.cardText}>{review.review}</Text>
@@ -139,6 +167,14 @@ const TutorHomeScreen = ({ navigation }) => {
                     <View style={styles.card}>
                         <Text style={styles.cardText}>No reviews available</Text>
                     </View>
+                )}
+
+                {reviews.length > 3 && (
+                    <TouchableOpacity onPress={() => setShowAllReviews(!showAllReviews)}>
+                        <Text style={styles.viewAllText}>
+                            {showAllReviews ? 'View Less' : 'View All'}
+                        </Text>
+                    </TouchableOpacity>
                 )}
             </ScrollView>
         </View>
@@ -180,8 +216,8 @@ const styles = StyleSheet.create({
         marginVertical: height * 0.02,
     },
     ratingText: {
-        fontSize: width * 0.05,
-        fontWeight: 'bold',
+        fontSize: width * 0.035,
+        color: 'white',
     },
     content: {
         flex: 1,
@@ -189,8 +225,8 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#001F3F',
         borderRadius: width * 0.05, // 5% of screen width
-        padding: width * 0.05, // 5% of screen width
-        marginBottom: height * 0.02, // 2% of screen height
+        padding: width * 0.03, // 5% of screen width
+        marginBottom: height * 0.01, // 2% of screen height
         alignItems: 'center',
     },
     cardTitle: {
@@ -215,11 +251,12 @@ const styles = StyleSheet.create({
         fontSize: width * 0.045, // 4.5% of screen width
         fontWeight: 'bold',
     },
-    viewAll: {
-        color: 'blue',
-        textDecorationLine: 'underline',
-        fontSize: width * 0.04, // 4% of screen width
+    viewAllText: {
+        color: '#007BFF',
+        textAlign: 'center',
+        marginTop: 10,
     },
+
 });
 
 export default TutorHomeScreen;

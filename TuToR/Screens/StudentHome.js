@@ -23,6 +23,7 @@ const HomeScreen = ({ navigation }) => {
     const [upcomingSessions, setUpcomingSessions] = useState([]);
     const [latestReviews, setLatestReviews] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showAllReviews, setShowAllReviews] = useState(false);
 
 
 
@@ -75,7 +76,6 @@ const HomeScreen = ({ navigation }) => {
                         // Sort reviews by timestamp in descending order and get the most recent 3
                         const sortedReviews = reviewsArray
                             .sort((a, b) => b.timestamp.toDate() - a.timestamp.toDate())  // Assuming 'timestamp' is a Firestore Timestamp
-                            .slice(0, 3);  // Get the top 3 reviews
                         setLoading(false);
                         setLatestReviews(sortedReviews);
                     }
@@ -97,6 +97,9 @@ const HomeScreen = ({ navigation }) => {
             if (unsubscribeLatestReviews) unsubscribeLatestReviews();
         };
     }, [currentUser]);  // The effect depends on currentUser
+    const formatToZAR = (amount) => {
+        return `R${Number(amount).toFixed(2)}`;
+    };
 
     if (loading) {
         return (
@@ -120,7 +123,7 @@ const HomeScreen = ({ navigation }) => {
                                 style={styles.profileImage}
                             />
                         ) : (
-                            <Ionicons name="person-outline" size={30} color="black" style={styles.profileIcon} />
+                            <Ionicons name="person" size={30} color="black" style={styles.profileIcon} />
                         )}
                     </TouchableOpacity>
                 </View>
@@ -132,7 +135,7 @@ const HomeScreen = ({ navigation }) => {
             </View>
 
             <Text style={styles.balanceText}>Current Balance</Text>
-            <Text style={styles.balanceAmount}>{currentUser.Balance} ZAR</Text>
+            <Text style={styles.balanceAmount}>{formatToZAR(currentUser.Balance)} ZAR</Text>
 
             <View style={styles.findTutorSection}>
                 <Text style={styles.findTutorText}>
@@ -175,7 +178,7 @@ const HomeScreen = ({ navigation }) => {
                     <Text style={styles.reviewsText}>Latest Reviews</Text>
                 </View>
                 {latestReviews.length > 0 ? (
-                    latestReviews.map((review, index) => (
+                    (showAllReviews ? latestReviews : latestReviews.slice(0, 3)).map((review, index) => (
                         <View key={index} style={styles.reviewCard}>
                             <Text style={styles.reviewText}>Review by {review?.reviewerName}:</Text>
                             <Text style={styles.reviewContent}>{review?.review}</Text>
@@ -186,6 +189,14 @@ const HomeScreen = ({ navigation }) => {
                     <View style={styles.noReviewsCard}>
                         <Text style={styles.noReviewsText}>No reviews yet</Text>
                     </View>
+                )}
+
+                {latestReviews.length > 3 && (
+                    <TouchableOpacity onPress={() => setShowAllReviews(!showAllReviews)}>
+                        <Text style={styles.viewAllText}>
+                            {showAllReviews ? 'View Less' : 'View All'}
+                        </Text>
+                    </TouchableOpacity>
                 )}
             </View>
         </ScrollView>
@@ -349,6 +360,7 @@ const styles = StyleSheet.create({
     noReviewsText: {
         color: '#666',
     },
+
 });
 
 export default HomeScreen;
