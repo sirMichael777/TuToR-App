@@ -20,6 +20,7 @@ const TransactionCard = ({ transaction, role }) => {
 
     // Convert Firestore Timestamp to a Date object, then format it to a readable string
     const formattedDate = timestamp?.seconds
+
         ? new Date(timestamp.seconds * 1000).toLocaleString('en-GB', {
             hour: '2-digit',
             minute: '2-digit',
@@ -41,7 +42,12 @@ const TransactionCard = ({ transaction, role }) => {
             // For students loading credits, it's a positive value
             displayAmount = `+R${Math.abs(amount).toFixed(2)}`;
             transactionLabel =`${payerName} `;
+
+        } else if (method === 'refund') {
+            displayAmount = `R${Math.abs(amount).toFixed(2)}`;
+            transactionLabel = `From: ${payerName}`;
         }
+
     } else if (role === 'Tutor') {
 
         if (method === 'earnings') {
@@ -91,32 +97,44 @@ const TransactionHistory = ({ navigation }) => {
 
                 if (role === 'Student') {
 
-                    paymentsQuery = query(
+                    const payerQuery = query(
                         collection(firestoreDB, 'payments'),
                         where('payerId', '==', currentUser._id),
-                        where('method', 'in',['sessionPayment',''])
+                        where('method', 'in',['sessionPayment','refund','CreditCardPayment','MobilePayment'])
                     );
 
-                    const querySnapshot = await getDocs(paymentsQuery);
-                    const fetchedTransactions = querySnapshot.docs.map((doc) => ({
-                        id: doc.id,
-                        ...doc.data(),
-                    }));
+                    const recipientQuery = query(
+                        collection(firestoreDB, 'payments'),
+                        where('recipientId', '==', currentUser._id),
+                    );
 
-                    // Sort transactions by timestamp (most recent at the top)
-                    const sortedTransactions = fetchedTransactions.sort(
+                    const [payerSnapshot, recipientSnapshot] = await Promise.all([
+                        getDocs(payerQuery),
+                        getDocs(recipientQuery),
+                    ]);
+
+                    const payments = [
+                        ...payerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                        ...recipientSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+                    ];
+
+                    // Sort payments by timestamp (most recent at the top)
+                    const sortedPayments = payments.sort(
                         (a, b) => b.timestamp.toDate() - a.timestamp.toDate()  // Assuming 'timestamp' is a Firestore Timestamp
                     );
-                    setTransactions(sortedTransactions);
+
+                    setTransactions(sortedPayments);
                 } else if (role === 'Tutor') {
 
                     const payerQuery = query(
                         collection(firestoreDB, 'payments'),
-                        where('payerId', '==', currentUser._id)
+                        where('payerId', '==', currentUser._id),
+                        where ('method','in',['earnings','withdrawal'])
                     );
                     const recipientQuery = query(
                         collection(firestoreDB, 'payments'),
-                        where('recipientId', '==', currentUser._id)
+                        where('recipientId', '==', currentUser._id),
+                        where ('method','in',['earnings','withdrawal'])
                     );
 
                     const [payerSnapshot, recipientSnapshot] = await Promise.all([
