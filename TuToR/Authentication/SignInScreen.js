@@ -8,16 +8,12 @@ import {
   ImageBackground,
   StyleSheet,
   ActivityIndicator,
-  KeyboardAvoidingView, ScrollView
+  KeyboardAvoidingView, ScrollView, Alert
 } from 'react-native';
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { firebaseAuth, firestoreDB } from "../Config/firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { firebaseAuth } from "../Config/firebaseConfig";
 import { isValidEmail } from "../ValidationUtils/ValidationUtils";
-import { useDispatch } from "react-redux";
-import { setUser } from "../context/actions/userActions";
-import { CommonActions } from "@react-navigation/native";
-import { Ionicons } from '@expo/vector-icons'; // Import Ionicons for password visibility
+import { Ionicons } from '@expo/vector-icons';
 
 export default function SignInScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -26,40 +22,19 @@ export default function SignInScreen({ navigation }) {
   const [showError, setShowError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // Manage password visibility
-  const dispatch = useDispatch();
+
 
   const handleSignIn = async () => {
     if (isValidEmail(email) && email !== "") {
       setLoading(true);
       await signInWithEmailAndPassword(firebaseAuth, email, password)
           .then((userCredential) => {
-            if (userCredential?.user) {
-              getDoc(doc(firestoreDB, 'users', userCredential?.user.uid)).then((docSnap) => {
-                if (docSnap.exists()) {
-                  const userData = docSnap.data();
-                  dispatch(setUser(userData));
-
-                  if (userData.role === 'Student') {
-                    navigation.dispatch(
-                        CommonActions.reset({
-                          index: 0,
-                          routes: [{ name: 'MainApp' }],
-                        })
-                    );
-                  } else if (userData.role === 'Tutor') {
-                    navigation.dispatch(
-                        CommonActions.reset({
-                          index: 0,
-                          routes: [{ name: 'TutorMainApp' }],
-                        })
-                    );
-                  }
-                }
-                setLoading(false);
-              });
-            }
-          }).catch((error) => {
-            setLoading(false);
+            setTimeout(() => {
+              setLoading(false);
+            }, 4000);
+          })
+          .catch((error) => {
+            setLoading(false);  // Set loading to false after error
             setError(error.message.includes('invalid-credential') ? "Incorrect password or email" : 'User does not exist');
             setShowError(true);
             setTimeout(() => {
