@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions, ImageBackground } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    ScrollView,
+    Dimensions,
+    ImageBackground,
+    Alert,
+    ActivityIndicator
+} from 'react-native';
 import {doc, getDoc, setDoc} from "firebase/firestore";
 import {firestoreDB,firebaseAuth} from "../Config/firebaseConfig";
-import {signOut} from 'firebase/auth'
+import {signOut,sendEmailVerification} from 'firebase/auth'
 
 const { width, height } = Dimensions.get('window');
 
 const TermsOfUseScreen = ({route, navigation }) => {
 
+    const currentUser = firebaseAuth?.currentUser;
+    const [loading, setLoading] = useState(false);
     const [isScrolledToEnd, setIsScrolledToEnd] = useState(false);
     const { userId } = route.params;
 
@@ -21,37 +33,37 @@ const TermsOfUseScreen = ({route, navigation }) => {
     };
 
     const handleAgree = async () => {
+        setLoading(true);  // Start loading
         try {
             const userDoc = await getDoc(doc(firestoreDB, 'users', userId));
             if (userDoc.exists()) {
-
                 const userData = userDoc.data();
-                const role = userData.role; // Get the role attribute from the user document
+                const role = userData.role;
 
                 const collectionName = role === 'Student' ? 'Students' : 'Tutors';
 
-                // Update the acceptedTerms field in the appropriate collection
                 await setDoc(doc(firestoreDB, 'users', userId), { acceptedTerms: true }, { merge: true });
 
-                if (collectionName === 'Students' && isScrolledToEnd ) {
+                if (collectionName === 'Students' && isScrolledToEnd) {
                     try {
+                        await sendEmailVerification(currentUser);
+                        Alert.alert('Email Sent', 'A verification email has been sent to your email address.');
                         await signOut(firebaseAuth);
                         await setDoc(doc(firestoreDB, 'Students', userId), { acceptedTerms: true }, { merge: true });
                     } catch (error) {
-                        console.error('Error signing out:', error.message); // Handle any error during sign out
+                        console.error('Error signing out:', error.message);
                     }
                 } else if (collectionName === 'Tutors' && isScrolledToEnd) {
                     await setDoc(doc(firestoreDB, 'Tutors', userId), { acceptedTerms: true }, { merge: true });
-                    navigation.navigate("ApplicationStatus")
+                    navigation.navigate("ApplicationStatus");
                 }
-
             } else {
                 console.error("User document does not exist");
-
             }
         } catch (error) {
             console.error("Error updating terms acceptance: ", error.message);
-
+        } finally {
+            setLoading(false);  // Stop loading
         }
     };
 
@@ -182,12 +194,17 @@ const TermsOfUseScreen = ({route, navigation }) => {
                     </ScrollView>
                 </View>
                 <TouchableOpacity
-                    style={[styles.agreeButton, { backgroundColor: isScrolledToEnd ? '#007BFF' : '#cccccc' }]}
+                    style={[styles.agreeButton, { backgroundColor: isScrolledToEnd && !loading ? '#007BFF' : '#cccccc' }]}
                     onPress={handleAgree}
-                    disabled={!isScrolledToEnd}
+                    disabled={!isScrolledToEnd || loading}  // Disable if not scrolled to end or loading
                 >
-                    <Text style={styles.agreeButtonText}>Agree and continue</Text>
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />  // Show loading indicator
+                    ) : (
+                        <Text style={styles.agreeButtonText}>Agree and continue</Text>
+                    )}
                 </TouchableOpacity>
+
             </View>
         </ImageBackground>
     );
