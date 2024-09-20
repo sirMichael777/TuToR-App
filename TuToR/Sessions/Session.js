@@ -70,13 +70,12 @@ const Session = ({ navigation }) => {
                     sessionsQuery = query(
                         collection(firestoreDB, 'Bookings'),
                         where('student._id', '==', currentUser._id),
-                        where('status', '!=', 'pending')
+                        where('status', 'in', ['accepted','completed','didntHappen'])
                     );
                 } else if (currentUser.role === 'Tutor') {
                     sessionsQuery = query(
                         collection(firestoreDB, 'Bookings'),
                         where('tutor._id', '==', currentUser._id),
-                        where('status', '!=', 'pending')
                     );
                 }
 
@@ -93,7 +92,7 @@ const Session = ({ navigation }) => {
 
                     allSessions.forEach((session) => {
                         const endTime = session.endTime.toDate();
-                        if (endTime < now && (session.status === 'accepted' || session.status === 'completed')) {
+                        if (endTime < now) {
                             completed.push(session);
                         } else {
                             scheduled.push(session);
@@ -200,10 +199,10 @@ const Session = ({ navigation }) => {
                 [currentUser.role === 'Student' ? 'studentAck' : 'tutorAck']: true,
             });
 
+
             const updatedSession = (await getDoc(sessionRef)).data();
 
             if (status === 'complete') {
-                console.log("We're here");
 
                 const tutorDoc = await getDoc(tutorRefInUsers);
 
@@ -212,12 +211,10 @@ const Session = ({ navigation }) => {
                     return;
                 }
 
-
                 const tutorData = tutorDoc.data();
 
                 const currentTutorBalance = tutorData.Balance || 0;  // Fetch the current balance of the tutor
                 const sessionCost = session.cost.toFixed(2);  // Ensure session cost has 2 decimal places
-
 
                 // Mark the session as completed if both parties acknowledged
 
@@ -242,7 +239,7 @@ const Session = ({ navigation }) => {
                         amount: parseFloat(sessionCost).toFixed(2),
                         method: 'earnings',
                         timestamp: new Date(),
-                });
+                   });
                     Alert.alert('Success', 'Session marked as complete! Payment released.');
                 } else {
                     Alert.alert('Pending', 'Waiting for the other party to mark the session as complete.');
@@ -250,9 +247,8 @@ const Session = ({ navigation }) => {
             } else if (status === 'didntHappen') {
 
                 await updateDoc(sessionRef, {
-                    status: 'didntHappen'
+                    status: 'didntHappen',
                 });
-
 
                 Alert.alert('Info', "Session marked as 'didn't happen'. Payment refunded to the student.");
             }
@@ -262,13 +258,6 @@ const Session = ({ navigation }) => {
         }
     };
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#000" />
-            </View>
-        );
-    }
 
     return (
         <View style={styles.container}>
@@ -302,7 +291,11 @@ const Session = ({ navigation }) => {
             </View>
 
             <ScrollView contentContainerStyle={[styles.contentContainer, { flexGrow: 1 }]}>
-                {activeTab === 'Scheduled' && scheduledSessions.length > 0 ? (
+                {loading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#23cbfb" />
+                    </View>
+                ) : activeTab === 'Scheduled' && scheduledSessions.length > 0 ? (
                     scheduledSessions.map((session) => {
                         const sessionHasEnded = new Date(session.endTime.seconds * 1000) < new Date();
 
@@ -336,6 +329,7 @@ const Session = ({ navigation }) => {
                     </View>
                 )}
             </ScrollView>
+
 
             <ReviewModal
                 isVisible={isReviewModalVisible}
