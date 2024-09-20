@@ -1,4 +1,4 @@
-import {ActivityIndicator, Image, View} from "react-native";
+import {ActivityIndicator, Alert, Image, View} from "react-native";
 import Logo from "../assets/Logo.png"
 import {useLayoutEffect} from "react";
 import {firebaseAuth, firestoreDB} from "../Config/firebaseConfig";
@@ -22,7 +22,26 @@ const LoadingScreen = ({navigation}) => {
                     const userData = docSnap.data();
                     dispatch(setUser(userData));
 
-                    if(userData.acceptedTerms){
+                    // Check if terms and conditions have been accepted
+                    if (userData.acceptedTerms) {
+                        // If terms are accepted, then check if the email is verified
+                        if (!user.emailVerified) {
+                            Alert.alert(
+                                'Email Verification Required',
+                                'Please verify your email to proceed. A verification email has been sent.',
+                                [
+                                    {
+                                        text: 'OK',
+                                        onPress: async () => {
+                                            await firebaseAuth.signOut();
+                                          }
+                                    }
+                                ]
+                            );
+                            return; // Prevent further execution if email is not verified
+                        }
+
+                        // Proceed with navigation if email is verified
                         if (userData.role === 'Student') {
                             navigation.dispatch(
                                 CommonActions.reset({
@@ -38,14 +57,16 @@ const LoadingScreen = ({navigation}) => {
                                 })
                             );
                         }
-                    }else{
+                    } else {
+                        // If terms and conditions are not accepted, navigate to Terms and Conditions screen
                         navigation.navigate('TermsAndConditions', { userId: user.uid });
                     }
                 }
             } else {
+                // If no user is logged in, redirect to SignInScreen after 2 seconds
                 setTimeout(() => {
-                    navigation.replace("SignInScreen"); // Replace with the tutor home screen
-                }, 2000);
+                    navigation.replace("SignInScreen");
+                }, 4000);
             }
         });
     };
