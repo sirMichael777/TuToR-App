@@ -39,7 +39,7 @@ export default function ResetPasswordScreen({ navigation }) {
         <View style={styles.fixedContainer}>
           <Text style={styles.title}>Reset password</Text>
           <Text style={styles.description}>
-            Please enter the email address associated with your account, and we'll send you a code to reset your password.
+            Please enter the email address associated with your account, and we'll send you an email to reset your password.
           </Text>
 
           <TextInput 
