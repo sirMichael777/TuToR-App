@@ -47,7 +47,7 @@ const NotificationIcon = ({ navigation }) => {
     return (
         <TouchableOpacity onPress={handleNotificationsClick}>
             <View style={styles.iconContainer}>
-                <Ionicons name="notifications-outline" size={24} color="black" />
+                <Ionicons name="notifications-outline" size={30} color="black" />
                 {pendingBookingsCount > 0 && (
                     <View style={styles.notificationBadge}>
                         <Text style={styles.notificationText}>{pendingBookingsCount}</Text>
