@@ -1,11 +1,11 @@
 import {FontAwesome5, Ionicons} from "@expo/vector-icons";
 import TutorHomeScreen from "../Screens/TutorHomeScreen";
 import EarningsScreen from "../Screens/Earning";
-import Session from "../Sessions/Session";
 import ChatScreen from "../Chat/Chat";
 import React from "react";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
 import useUserDataListener from "./UpdateData";
+import SessionScreen from "../Sessions/Session";
 
 
 const Tab = createBottomTabNavigator();
@@ -36,11 +36,12 @@ export default function TutorMainApp() {
                 tabBarActiveTintColor: 'blue',
                 tabBarInactiveTintColor: 'gray',
                 headerShown: false,
+                unmountOnBlur: true,
             })}
         >
             <Tab.Screen name="Home" component={TutorHomeScreen} />
             <Tab.Screen name="Earnings" component={EarningsScreen} />
-            <Tab.Screen name="Sessions" component={Session} />
+            <Tab.Screen name="Sessions" component={SessionScreen} />
             <Tab.Screen name="Chat" component={ChatScreen} />
         </Tab.Navigator>
     );
