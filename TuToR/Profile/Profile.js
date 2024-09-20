@@ -60,7 +60,7 @@ const ProfileScreen = ({ navigation }) => {
                         {currentUser.providerData.email || 'user@example.com'}
                     </Text>
                 </View>
-
+                <TouchableOpacity onPress={() => navigation.navigate('PersonalInfo')}>
                     {currentUser.imageUrl ? (
                         <Image
                             source={{ uri: currentUser.imageUrl }}
@@ -68,9 +68,11 @@ const ProfileScreen = ({ navigation }) => {
                         />
                     ) : (
                         <View style={styles.profileImagePlaceholder}>
-                            <Ionicons name="person-circle-outline" size={width * 0.15} color="#cccccc" />
+                            <Ionicons name="person-circle-outline" size={width * 0.15} color="black" />
                         </View>
                     )}
+                </TouchableOpacity>
+
 
             </View>
 
@@ -146,7 +148,6 @@ const styles = StyleSheet.create({
         borderRadius: width * 0.075, // 50% of the image width (circular)
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#cccccc',
     },
     optionsContainer: {
         backgroundColor: '#23cbfb',
