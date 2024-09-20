@@ -32,6 +32,7 @@ export default function MainApp() {
                 tabBarActiveTintColor: 'blue',
                 tabBarInactiveTintColor: 'gray',
                 headerShown: false,
+                unmountOnBlur: true,
             })}
         >
             <Tab.Screen name="Home" component={StudentHome} />
