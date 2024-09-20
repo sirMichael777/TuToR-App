@@ -31,26 +31,21 @@ const SessionCard = ({ session, role, onReviewPress, onMarkAsComplete, enable, s
     const canTakeAction = reviewedBy.includes(isStudent ? student._id : tutor._id);
 
 
-    // Conditionally render status messages and hide buttons after action
     const renderActionStatus = () => {
 
         if (isStudent) {
-            if (studentAck) {
+            if (studentAck && status=== 'completed') {
                 return <Text style={styles.completeText}>Complete</Text>;
             } else if (status === 'didntHappen') {
-                return <Text style={styles.didntHappenText}>Session didn't happen</Text>;
+                return <Text style={styles.didntHappenText}>You marked the session as didnt happen you can contact us at tutorSupport@tutors.co.za for a refund/to report a specific problem</Text>;
             }
         } else {
-            if (tutorAck && studentAck) {
+            if (tutorAck && studentAck && status !== 'didntHappen') {
                 return <Text style={styles.completeText}>Payment released</Text>;
             } else if (tutorAck && !studentAck) {
                 return <Text style={styles.awaitingText}>Awaiting student acknowledgment before releasing payment</Text>;
-            } else if (studentAck && status === 'didntHappen') {
-                return (
-                    <Text style={styles.conflictingText}>
-                        Student has a contradicting remark. Please report to support@example.com.
-                    </Text>
-                );
+            } else if (status === 'didntHappen'){
+                return <Text style={styles.awaitingText}>The student marked the session as didnt happen, if this is not the case you can contact us at tutorSupport@tutors.co.za</Text>;
             }
         }
         return null;
@@ -67,10 +62,10 @@ const SessionCard = ({ session, role, onReviewPress, onMarkAsComplete, enable, s
 ;
 
         } catch (error) {
-            // Show an alert for error handling
+
             Alert.alert('Action Failed', 'There was a problem submitting your action. Please try again later.');
         } finally {
-            setLoading(false);  // Stop loading once the action is completed or fails
+            setLoading(false);
         }
     };
 
@@ -112,14 +107,16 @@ const SessionCard = ({ session, role, onReviewPress, onMarkAsComplete, enable, s
                             {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.completeButtonText}>Mark as Complete</Text>}
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.didntHappenButton}  // Change opacity if disabled
-                            onPress={() => handleAction('didntHappen')}  // Pass 'didntHappen' as action
-                            disabled={!enable || loading}  // Disable button when 'enable' is false or loading
-                            accessibilityLabel="Didn't happen button"
-                        >
-                            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.didntHappenButtonText}>Didn't Happen</Text>}
-                        </TouchableOpacity>
+                        {role === 'Student' && (
+                            <TouchableOpacity
+                                style={styles.didntHappenButton}  // Change opacity if disabled
+                                onPress={() => handleAction('didntHappen')}  // Pass 'didntHappen' as action
+                                disabled={!enable || loading}  // Disable button when 'enable' is false or loading
+                                accessibilityLabel="Didn't happen button"
+                            >
+                                {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.didntHappenButtonText}>Didn't Happen</Text>}
+                            </TouchableOpacity>
+                        )}
                     </View>
                 ) : (
                     renderActionStatus()
