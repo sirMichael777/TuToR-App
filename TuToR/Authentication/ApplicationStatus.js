@@ -1,16 +1,29 @@
-import React, {useEffect} from 'react';
-import {View, Text, ImageBackground, StyleSheet, Dimensions, TouchableOpacity, BackHandler} from 'react-native';
-import {signOut} from "firebase/auth";
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  ImageBackground,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  BackHandler,
+  Alert,
+  ActivityIndicator
+} from 'react-native';
+import {sendEmailVerification, signOut} from "firebase/auth";
 import {firebaseAuth} from "../Config/firebaseConfig";
+
 
 export default function ApplicationStatus({ navigation }) {
   const windowDimensions = Dimensions.get('window');
   const height = windowDimensions.height;
   const width = windowDimensions.width;
+  const currentUser = firebaseAuth?.currentUser;
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const backAction = () => {
-      // Returning true disables the back button
+
       return true;
     };
 
@@ -25,9 +38,16 @@ export default function ApplicationStatus({ navigation }) {
 
   const handleSignOut = async () => {
     try {
+      setLoading(true);  // Start loading
+
+      await sendEmailVerification(currentUser);
+      Alert.alert('Email Sent', 'A verification email has been sent to your email address. Please verify your email before proceeding.');
+
       await signOut(firebaseAuth); // Sign out from Firebase authentication
     } catch (error) {
       console.error('Error signing out:', error.message); // Handle any error during sign out
+    } finally {
+      setLoading(false);  // Stop loading
     }
   };
 
@@ -44,12 +64,18 @@ export default function ApplicationStatus({ navigation }) {
             Your application is currently under review. We are verifying your qualifications and experience to ensure the highest quality for our students.
           </Text>
 
-          <TouchableOpacity 
-            style={[styles.button, { marginTop: 30 }]} 
-            onPress={handleSignOut}
+          <TouchableOpacity
+              style={[styles.button, { marginTop: 30 }]}
+              onPress={handleSignOut}
+              disabled={loading}  // Disable button while loading
           >
-            <Text style={styles.buttonText}>OK</Text>
+            {loading ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />  // Show loading indicator
+            ) : (
+                <Text style={styles.buttonText}>OK</Text>
+            )}
           </TouchableOpacity>
+
         </View>
       </ImageBackground>
     </View>
